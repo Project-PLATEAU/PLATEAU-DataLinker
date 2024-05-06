@@ -36,3 +36,13 @@
     transform: rotate(360deg);
   }
 }
+
+.connector-line {
+  background-color: #3fb2ff; /* 線の色 */
+  height: 2px; /* 線の太さ */
+  width: 8.7%; /* 横に伸ばす */
+  position: absolute; /* 絶対位置指定 */
+  left: 46.5%; /* 左から50％に配置 */
+  top: 43%; /* 要素の中央に配置 */
+  transform: translateY(-50%); /* 正確に中央に来るように調整 */
+}
