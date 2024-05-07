@@ -24,7 +24,7 @@ export function processGMLData(
 
     const pairs = matchPairs(traverseResults, averageValue2);
     if (pairs.length === 0) {
-      alert("紐づけできませんでした");
+      alert("紐づけできませんでした。適切なペアが見つかりません。");
       return;
     }
 
@@ -32,7 +32,6 @@ export function processGMLData(
     // gmlObjectの建物要素を更新する
     const updatedGmlObject = updateBuildingElements(gmlObject, pairs, selectedData);
 
-    console.log(updatedGmlObject["core:CityModel"]["core:cityObjectMember"]);
 
     // downloadXMLContent(builder.build(updatedGmlObject), "testResult.gml");
   }
@@ -126,11 +125,6 @@ function updateBuildingElements(
           });
         }
       });
-      // // 建物要素に新しい文字列属性を追加
-      // buildingElement["bldg:Building"]["gen:stringAttribute"].push({
-      //   "@_name": selectedData[0].attributeName, // 属性名を設定
-      //   "gen:value": pair.result[selectedData[0].tag], // 結果から名前を取得して設定
-      // });
     });
   });
 
