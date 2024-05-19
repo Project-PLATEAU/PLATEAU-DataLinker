@@ -15,14 +15,14 @@ const plateauTags = [
     label: "Generic属性",
     explanation: "独自の属性として追加可能なタグ",
   },
-  {
-    value: "bldg:address",
-    label: "address属性",
-    explanation: "住所を表す属性",
-  },
 ];
 
 // チェックボックスコンポーネント
+/**
+ * チェックボックスコンポーネント
+ * @param {boolean} checked - チェックボックスの初期状態
+ * @param {function} onChange - チェックボックスの状態が変更されたときに呼び出される関数
+ */
 const Checkbox = ({
   checked,
   onChange,
@@ -39,8 +39,13 @@ const Checkbox = ({
 );
 
 // PLATEAUタグを選択するためのセレクトボックスコンポーネント
-// SelectPlateauTag コンポーネントは、PLATEAUタグを選択するためのセレクトボックスを提供します。
-// `tags` は選択可能なタグのリスト、`value` は現選択されているタグの値、`onChange` はタグが選択さ���たときに呼び出される関数です。
+/**
+ * PLATEAUタグを選択するためのセレクトボックスコンポーネント
+ * @param {string[]} tags - 選択可能なタグのリスト
+ * @param {string} value - 現在選択されているタグの値
+ * @param {string[]} option - 各タグの説明
+ * @param {function} onChange - タグが選択されたときに呼び出される関数
+ */
 const SelectPlateauTag = ({
   tags,
   value,
@@ -53,24 +58,24 @@ const SelectPlateauTag = ({
   onChange: (value: string) => void;
 }) => (
   <select
-    className="block appearance-none w-full bg-white border border-gray-300 leading-tight focus:outline-none focus:shadow-outline" // セレクトボックスのスタイルを定義
-    value={value} // 現在選択されている値をセレクトボックスに設定
-    onChange={(e) => onChange(e.target.value)} // 選択された値が変更されたときにonChange関数を呼び出す
+    className="block appearance-none w-full bg-white border border-gray-300 leading-tight focus:outline-none focus:shadow-outline"
+    value={value}
+    onChange={(e) => onChange(e.target.value)}
   >
-    {tags.map(
-      (
-        tag,
-        index // `tags` 配列をループして、各タグに対して<option>要素を生成
-      ) => (
-        <option key={index} value={tag} title={option[index]}>
-          {tag}
-        </option>
-      )
-    )}
+    {tags.map((tag, index) => (
+      <option key={index} value={tag} title={option[index]}>
+        {tag}
+      </option>
+    ))}
   </select>
 );
 
 // テキスト入力コンポーネント
+/**
+ * テキスト入力コンポーネント
+ * @param {string} value - 入力フィールドの初期値
+ * @param {function} onChange - 入力フィールドの値が変更されたときに呼び出される関数
+ */
 const TextInput = ({
   value = "",
   onChange,
@@ -87,6 +92,11 @@ const TextInput = ({
 );
 
 // データタグテーブルコンポーネント
+/**
+ * データタグテーブルコンポーネント
+ * @param {string[]} anyDataTags - 任意のデータタグのリスト
+ * @param {function} onSelectedTagsChange - 選択されたタグの情報を親コンポーネントに通知するためのコールバック関数
+ */
 const DataTagTable: React.FC<DataTagTableProps> = ({
   anyDataTags,
   onSelectedTagsChange,
@@ -102,56 +112,62 @@ const DataTagTable: React.FC<DataTagTableProps> = ({
   );
 
   // チェックボックスの変更を処理する関数
-  // チェックボックスの状態が変更されたときに呼び出される関数
-  const handleCheckboxChange = (
-    tag: string,
-    isChecked: boolean,
-    plateauTag: string,
-    attributeName: string
-  ) => {
-    // 新しいデータオブジェクトを作成
-    const newData = { tag, plateauTag, attributeName };
-    // チェックされている場合は新しいデータを追加し、そうでない場合は既存のデータから削除
-    const updatedSelectedData = isChecked
-      ? [...selectedData, newData]
-      : selectedData.filter((data) => data.tag !== tag);
-    // 更新されたデータを状態に設定
+  /**
+   * チェックボックスの状態が変更されたときに呼び出される関数
+   * @param {string} tag - 任意のデータタグ
+   * @param {boolean} isChecked - チェックボックスの新しい状態
+   */
+  const handleCheckboxChange = (tag: string, isChecked: boolean) => {
+    let updatedSelectedData = [...selectedData];
+    if (isChecked) {
+      updatedSelectedData.push({
+        tag,
+        plateauTag: "",
+        attributeName: "",
+      });
+    } else {
+      updatedSelectedData = updatedSelectedData.filter(
+        (data) => data.tag !== tag
+      );
+    }
     setSelectedData(updatedSelectedData);
-    // 親コンポーネントに更新されたデータを通知
     onSelectedTagsChange(updatedSelectedData);
   };
 
-  const handleAttributeChange = (index: number, value: string) => {
-    const newAttributeNames = [...attributeNames];
-    newAttributeNames[index] = value;
-    setAttributeNames(newAttributeNames);
+  // PLATEAUタグの選択を処理する関数
+  /**
+   * PLATEAUタグの選択が変更されたときに呼び出される関数
+   * @param {number} index - 任意のデータタグのインデックス
+   * @param {string} value - 新しく選択されたPLATEAUタグの値
+   */
+  const handlePlateauTagChange = (index: number, value: string) => {
+    const updatedSelections = [...plateauTagSelections];
+    updatedSelections[index] = value;
+    setPlateauTagSelections(updatedSelections);
 
-    // 属性名が変更された際に、選択されたデータを更新
-    const newData = selectedData.map((data) => {
-      if (data.tag === anyDataTags[index]) {
-        return { ...data, attributeName: value };
-      }
-      return data;
-    });
-    setSelectedData(newData);
-    onSelectedTagsChange(newData);
+    const updatedSelectedData = selectedData.map((data, i) =>
+      i === index ? { ...data, plateauTag: value } : data
+    );
+    setSelectedData(updatedSelectedData);
+    onSelectedTagsChange(updatedSelectedData);
   };
 
-  const handlePlateauTagChange = (index: number, newPlateauTag: string) => {
-    const newPlateauTags = [...plateauTagSelections];
-    newPlateauTags[index] = newPlateauTag;
-    setPlateauTagSelections(newPlateauTags);
+  // 属性名の入力を処理する関数
+  /**
+   * 属性名の入力が変更されたときに呼び出される関数
+   * @param {number} index - 任意のデータタグのインデックス
+   * @param {string} value - 新しく入力された属性名
+   */
+  const handleAttributeNameChange = (index: number, value: string) => {
+    const updatedAttributeNames = [...attributeNames];
+    updatedAttributeNames[index] = value;
+    setAttributeNames(updatedAttributeNames);
 
-    if (selectedData.some((data) => data.tag === anyDataTags[index])) {
-      const newData = selectedData.map((data) => {
-        if (data.tag === anyDataTags[index]) {
-          return { ...data, plateauTag: newPlateauTag };
-        }
-        return data;
-      });
-      setSelectedData(newData);
-      onSelectedTagsChange(newData);
-    }
+    const updatedSelectedData = selectedData.map((data, i) =>
+      i === index ? { ...data, attributeName: value } : data
+    );
+    setSelectedData(updatedSelectedData);
+    onSelectedTagsChange(updatedSelectedData);
   };
 
   return (
@@ -189,38 +205,27 @@ const DataTagTable: React.FC<DataTagTableProps> = ({
             <tr key={index}>
               <td className="px-6 py-4 whitespace-nowrap">
                 <Checkbox
-                  // `checked`プロパティは、`selectedData`配列内に現在のタグが存在するかどうかを確認します。
-                  // 存在する場合はチェックボックスがチェックされます。
                   checked={selectedData.some((data) => data.tag === tag)}
-                  // `onChange`イベントは、チェックボックスの状態が変更されたときに呼び出されます。
-                  // `handleCheckboxChange`関数に現在のタグ、チェック状態、対応するPLATEAUタグの値、属性名を渡します。
                   onChange={(e) =>
-                    handleCheckboxChange(
-                      tag,
-                      e.target.checked,
-                      plateauTagSelections[index],
-                      attributeNames[index]
-                    )
+                    handleCheckboxChange(tag, e.target.checked)
                   }
                 />
               </td>
               <td className="px-6 py-4 whitespace-nowrap">{tag}</td>
               <td className="px-6 py-4 whitespace-nowrap">
                 <SelectPlateauTag
-                  tags={plateauTags.map((tag) => tag.label)}
-                  // 選択されたデータから、現在のタグに対応するPLATEAUタグを取得します。見つからない場合は空文字列を返します。
+                  tags={plateauTags.map((t) => t.value)}
                   value={plateauTagSelections[index]}
-                  option={plateauTags.map((tag) => tag.explanation)}
-                  // PLATEAUタグが変更された場合、handlePlateauTagChange関数を呼び出して、新しいタグとそのインデックスを渡します。
-                  onChange={(newPlateauTag) =>
-                    handlePlateauTagChange(index, newPlateauTag)
-                  }
+                  option={plateauTags.map((t) => t.explanation)}
+                  onChange={(value) => handlePlateauTagChange(index, value)}
                 />
               </td>
               <td className="px-6 py-4 whitespace-nowrap">
                 <TextInput
                   value={attributeNames[index]}
-                  onChange={(e) => handleAttributeChange(index, e.target.value)}
+                  onChange={(e) =>
+                    handleAttributeNameChange(index, e.target.value)
+                  }
                 />
               </td>
             </tr>

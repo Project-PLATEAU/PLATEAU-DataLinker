@@ -1,0 +1,29 @@
+{
+  "FeatureCollection": {
+    "type": "FeatureCollection",
+    "features": [
+      {
+        "type": "Feature",
+        "geometry": {
+          "type": "Point",
+          "coordinates": [139.79575836519945, 35.53325739000526]
+        },
+        "properties": {
+          "id": "p1",
+          "name": "東京タワー店"
+        }
+      },
+      {
+        "type": "Feature",
+        "geometry": {
+          "type": "Point",
+          "coordinates": [139.79636246227483, 35.53308230875351]
+        },
+        "properties": {
+          "id": "p2",
+          "name": "スカイツリー店"
+        }
+      }
+    ]
+  }
+}

@@ -1,74 +1,80 @@
 import React, { useState } from "react";
 import "./App.css";
 import FileUploader from "./components/FileUploader";
-import { processGMLData } from "./scripts/dataMatching"; // Importing exampleFunction from xml.ts
-// import { xmlValidate, loadStaticFile } from "./pyodyteJs";
+import { processGMLData } from "./scripts/dataProcessing";
 import { xmlValidate } from "./pyodyteJs";
-
 import { analyzeString } from "./scripts/analysis";
-
 import TagsComboBox from "./components/TagsComboBox";
-import DataTagTable from "./components/DataTagTable"; // Importing the DataTagTable component
-import { XMLBuilder } from "fast-xml-parser";
+import DataTagTable from "./components/DataTagTable";
 
+/**
+ * メインのアプリケーションコンポーネント
+ * PLATEAUと任意のデータをアップロードし、タグを選択してデータを紐づけるUIを提供します。
+ */
 function App() {
   const [plateauTags, setPlateauTags] = useState<string[]>([]);
   const [anyDataTags, setAnyDataTags] = useState<string[]>([]);
-  // New state for storing the parsed XML object
   const [plateauXmlObject, setPlateauXmlObject] = useState<any>(null);
   const [anyDataXmlObject, setAnyDataXmlObject] = useState<any>(null);
   const [selectedPlateauTag, setSelectedPlateauTag] = useState<string>("");
   const [selectedAnyDataTag, setSelectedAnyDataTag] = useState<string>("");
   const [selectedData, setSelectedData] = useState<{ tag: string; plateauTag: string; attributeName: string }[]>([]);
 
+  /**
+   * PLATEAUのタグが収集されたときに呼ばれるハンドラー
+   * @param collectedTags 収集されたタグの配列
+   */
   const handlePlateauTagsCollected = (collectedTags: string[]) => {
     setPlateauTags(collectedTags);
   };
 
+  /**
+   * 任意のデータのタグが収集されたときに呼ばれるハンドラー
+   * @param collectedTags 収集されたタグの配列
+   */
   const handleAnyDataTagsCollected = (collectedTags: string[]) => {
     setAnyDataTags(collectedTags);
   };
 
-  // New handler for the parsed XML object
+  /**
+   * PLATEAUのXMLデータがパースされたときに呼ばれるハンドラー
+   * @param xmlObject パースされたXMLオブジェクト
+   */
   const handlePlateauParsed = (xmlObject: any) => {
     setPlateauXmlObject(xmlObject);
   };
 
+  /**
+   * 任意のデータのXMLがパースされたときに呼ばれるハンドラー
+   * @param xmlObject パースされたXMLオブジェクト
+   */
   const handleAnyDataParsed = (xmlObject: any) => {
     setAnyDataXmlObject(xmlObject);
   };
 
+  /**
+   * PLATEAUのタグが選択されたときに呼ばれるハンドラー
+   * @param tag 選択されたタグ
+   */
   const handlePlateauTagSelected = (tag: string) => {
     setSelectedPlateauTag(tag);
   };
 
+  /**
+   * 任意のデータのタグが選択されたときに呼ばれるハンドラー
+   * @param tag 選択されたタグ
+   */
   const handleAnyDataTagSelected = (tag: string) => {
     setSelectedAnyDataTag(tag);
   };
 
+  /**
+   * 選択されたタグの変更をハンドルする
+   * @param selectedData 選択されたデータの配列
+   */
   const handleSelectedTagsChange = (selectedData: { tag: string; plateauTag: string; attributeName: string }[]) => {
     setSelectedData(selectedData);
   };
-  // const validateXml = async () => {
-  //   try {
-  //     const schema = await loadStaticFile('/schemas/test.xsd'); // スキーマファイルのパスを指定
-  //     const options = {
-  //       ignoreAttributes: false,
-  //       format: true,
-  //     };
-  //     const builder = new XMLBuilder(options);
-  //     const a = builder.build(plateauXmlObject);
-
-  //     if (a) {
-  //       xmlValidate();
-  //     } else {
-  //       alert('XML ドキュメントが未設定です。');
-  //     }
-  //   } catch (error) {
-  //     alert('スキーマファイルの読み込みに失敗しました。');
-  //     console.error(error);
-  //   }
-  // };
 
   return (
     <div>
@@ -82,18 +88,15 @@ function App() {
           </p>
           <FileUploader
             onTagsCollected={handlePlateauTagsCollected}
-            onXmlParsed={handlePlateauParsed} // Passing the new handler
+            onDataParsed={handlePlateauParsed}
             accept=".gml"
-          />{" "}
+          />
           <TagsComboBox
             tags={plateauTags}
             selectedTag={selectedPlateauTag}
             onTagSelected={handlePlateauTagSelected}
           />
-          {/* <TagsComboBox tags={plateauTags} /> */}
         </div>
-
-        {/* <div className="connector-line"></div> */}
 
         <div className="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4 w-1/2 ml-2">
           <h2 className="block text-gray-700 text-xl font-bold mb-2">
@@ -104,7 +107,7 @@ function App() {
           </p>
           <FileUploader
             onTagsCollected={handleAnyDataTagsCollected}
-            onXmlParsed={handleAnyDataParsed} // Passing the new handler
+            onDataParsed={handleAnyDataParsed}
             accept=".gml,.xml,.csv,.json,.geojson"
           />
           <TagsComboBox
@@ -112,14 +115,12 @@ function App() {
             selectedTag={selectedAnyDataTag}
             onTagSelected={handleAnyDataTagSelected}
           />
-          {/* <TagsComboBox tags={anyDataTags} /> */}
         </div>
       </div>
 
       <div className="container mx-auto p-4">
-      <DataTagTable
+        <DataTagTable
           anyDataTags={anyDataTags}
-          plateauTags={plateauTags}
           onSelectedTagsChange={handleSelectedTagsChange}
         />
       </div>
