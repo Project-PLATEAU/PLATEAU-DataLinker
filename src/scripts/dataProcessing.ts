@@ -1,6 +1,6 @@
 // src/scripts/dataProcessing.ts
 import { traverse, traverseCityGML, matchPairs } from "./utilities";
-
+import { XMLBuilder } from "fast-xml-parser";
 /**
  * GMLデータを処理し、建物要素を更新します。
  * 
@@ -17,6 +17,7 @@ export function processGMLData(
   str2: string,
   selectedData: { tag: string; plateauTag: string; attributeName: string }[]
 ) {
+
   if (gmlObject && typeof gmlObject === "object") {
     const cityObjectMembers = extractCityObjectMembers(gmlObject);
     const traverseResults = cityObjectMembers.map((member: any) =>
@@ -24,7 +25,7 @@ export function processGMLData(
     );
 
     let averageValue2 = traverse(gmlObject2, str2);
-
+ 
     const pairs = matchPairs(traverseResults, averageValue2);
     if (pairs.length === 0) {
       alert("紐づけできませんでした。適切なペアが見つかりません。");
@@ -40,7 +41,16 @@ export function processGMLData(
 
     console.log(updatedGmlObject["core:CityModel"]["core:cityObjectMember"]);
 
-    // downloadXMLContent(builder.build(updatedGmlObject), "testResult.gml");
+    const options = {
+      ignoreAttributes: false,
+      format: true,
+    };
+    
+    const builder = new XMLBuilder(options);
+
+    const xmlContent = builder.build(updatedGmlObject);
+    downloadXMLContent(xmlContent, "Result.gml");
+
   }
 }
 
@@ -82,6 +92,7 @@ function updateBuildingElements(
   const clonedGmlObject = JSON.parse(JSON.stringify(gmlObject));
 
   // pairs配列をループして各ペアに対する処理を行う
+
   pairs.forEach((pair: any) => {
     // clonedGmlObjectから建物要素を抽出
     const buildingElements = clonedGmlObject["core:CityModel"][
@@ -93,12 +104,16 @@ function updateBuildingElements(
     );
 
     // 抽出した建物要素に対して処理を行う
+    // 各建物要素に対して処理を行う
     buildingElements.forEach((buildingElement: any) => {
+      // 選択されたデータの配列をループ
       selectedData.forEach((data) => {
+        // ペアの結果にデータタグが存在するか確認
         if (pair.result[data.tag]) {
-          buildingElement["bldg:Building"]["gen:stringAttribute"].push({
-            "@_name": data.attributeName,
-            "gen:value": pair.result[data.tag],
+          // 建物要素の指定されたPLATEAUタグに新しい属性を追加
+          buildingElement["bldg:Building"][data.plateauTag].push({
+            "@_name": data.attributeName, // 属性名を設定
+            "gen:value": pair.result[data.tag], // ペアの結果から値を設定
           });
         }
       });
@@ -106,4 +121,14 @@ function updateBuildingElements(
   });
 
   return clonedGmlObject; // 変更を加えた複製オブジェクトを返す
+}
+
+function downloadXMLContent(xmlContent: string, fileName: string): void {
+  const blob = new Blob([xmlContent], { type: "text/xml" });
+  const link = document.createElement("a");
+  link.href = URL.createObjectURL(blob);
+  link.download = fileName;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
 }

@@ -1,21 +1,12 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 
 // プロパティの型定義
 interface DataTagTableProps {
   anyDataTags: string[];
-  // plateauTags: string[];
   onSelectedTagsChange: (
-    selectedData: { tag: string; plateauTag: string; attributeName: string }[]
+    selectedData: { tag: string; plateauTag: string; attributeName: string; index: number }[]
   ) => void; // 親コンポーネントに選択された行の情報を通知するためのコールバック
 }
-
-const plateauTags = [
-  {
-    value: "gen:stringAttribute",
-    label: "Generic属性",
-    explanation: "独自の属性として追加可能なタグ",
-  },
-];
 
 // チェックボックスコンポーネント
 /**
@@ -38,43 +29,11 @@ const Checkbox = ({
   />
 );
 
-// PLATEAUタグを選択するためのセレクトボックスコンポーネント
-/**
- * PLATEAUタグを選択するためのセレクトボックスコンポーネント
- * @param {string[]} tags - 選択可能なタグのリスト
- * @param {string} value - 現在選択されているタグの値
- * @param {string[]} option - 各タグの説明
- * @param {function} onChange - タグが選択されたときに呼び出される関数
- */
-const SelectPlateauTag = ({
-  tags,
-  value,
-  option,
-  onChange,
-}: {
-  tags: string[];
-  value: string;
-  option: string[];
-  onChange: (value: string) => void;
-}) => (
-  <select
-    className="block appearance-none w-full bg-white border border-gray-300 leading-tight focus:outline-none focus:shadow-outline"
-    value={value}
-    onChange={(e) => onChange(e.target.value)}
-  >
-    {tags.map((tag, index) => (
-      <option key={index} value={tag} title={option[index]}>
-        {tag}
-      </option>
-    ))}
-  </select>
-);
-
 // テキスト入力コンポーネント
 /**
  * テキスト入力コンポーネント
  * @param {string} value - 入力フィールドの初期値
- * @param {function} onChange - 入力フィールドの値が変更されたときに呼び出される関数
+ * @param {function} onChange - 入力フィールド��値が変更されたときに呼び出される関数
  */
 const TextInput = ({
   value = "",
@@ -102,28 +61,49 @@ const DataTagTable: React.FC<DataTagTableProps> = ({
   onSelectedTagsChange,
 }) => {
   const [selectedData, setSelectedData] = useState<
-    { tag: string; plateauTag: string; attributeName: string }[]
+    { tag: string; plateauTag: string; attributeName: string; index: number }[]
   >([]);
   const [attributeNames, setAttributeNames] = useState<string[]>(
     new Array(anyDataTags.length).fill("")
   );
-  const [plateauTagSelections, setPlateauTagSelections] = useState<string[]>(
-    new Array(anyDataTags.length).fill("")
-  );
+
+  // anyDataTagsが変更されたときにselectedDataを初期化する
+  useMemo(() => {
+    setSelectedData([]);
+    setAttributeNames(new Array(anyDataTags.length).fill(""));
+    onSelectedTagsChange([]);
+  }, [anyDataTags]);
+
 
   // チェックボックスの変更を処理する関数
   /**
    * チェックボックスの状態が変更されたときに呼び出される関数
    * @param {string} tag - 任意のデータタグ
    * @param {boolean} isChecked - チェックボックスの新しい状態
+   * @param {number} index - 行番号
+   * @param {string} plateauTag - 選択されているPLATEAUタグの値
+   * @param {string} attributeName - 入力されている属性名
    */
-  const handleCheckboxChange = (tag: string, isChecked: boolean) => {
+  const handleCheckboxChange = ({
+    tag,
+    isChecked,
+    index,
+    plateauTag,
+    attributeName,
+  }: {
+    tag: string;
+    isChecked: boolean;
+    index: number;
+    plateauTag: string;
+    attributeName: string;
+  }) => {
     let updatedSelectedData = [...selectedData];
     if (isChecked) {
       updatedSelectedData.push({
         tag,
-        plateauTag: "",
-        attributeName: "",
+        plateauTag,
+        attributeName,
+        index,
       });
     } else {
       updatedSelectedData = updatedSelectedData.filter(
@@ -132,24 +112,7 @@ const DataTagTable: React.FC<DataTagTableProps> = ({
     }
     setSelectedData(updatedSelectedData);
     onSelectedTagsChange(updatedSelectedData);
-  };
 
-  // PLATEAUタグの選択を処理する関数
-  /**
-   * PLATEAUタグの選択が変更されたときに呼び出される関数
-   * @param {number} index - 任意のデータタグのインデックス
-   * @param {string} value - 新しく選択されたPLATEAUタグの値
-   */
-  const handlePlateauTagChange = (index: number, value: string) => {
-    const updatedSelections = [...plateauTagSelections];
-    updatedSelections[index] = value;
-    setPlateauTagSelections(updatedSelections);
-
-    const updatedSelectedData = selectedData.map((data, i) =>
-      i === index ? { ...data, plateauTag: value } : data
-    );
-    setSelectedData(updatedSelectedData);
-    onSelectedTagsChange(updatedSelectedData);
   };
 
   // 属性名の入力を処理する関数
@@ -163,9 +126,10 @@ const DataTagTable: React.FC<DataTagTableProps> = ({
     updatedAttributeNames[index] = value;
     setAttributeNames(updatedAttributeNames);
 
-    const updatedSelectedData = selectedData.map((data, i) =>
-      i === index ? { ...data, attributeName: value } : data
+    const updatedSelectedData = selectedData.map((data) =>
+      data.index === index ? { ...data, attributeName: value } : data
     );
+
     setSelectedData(updatedSelectedData);
     onSelectedTagsChange(updatedSelectedData);
   };
@@ -207,19 +171,18 @@ const DataTagTable: React.FC<DataTagTableProps> = ({
                 <Checkbox
                   checked={selectedData.some((data) => data.tag === tag)}
                   onChange={(e) =>
-                    handleCheckboxChange(tag, e.target.checked)
+                    handleCheckboxChange({
+                      tag,
+                      isChecked: e.target.checked,
+                      index,
+                      plateauTag: "gen:stringAttribute",
+                      attributeName: attributeNames[index],
+                    })
                   }
                 />
               </td>
               <td className="px-6 py-4 whitespace-nowrap">{tag}</td>
-              <td className="px-6 py-4 whitespace-nowrap">
-                <SelectPlateauTag
-                  tags={plateauTags.map((t) => t.value)}
-                  value={plateauTagSelections[index]}
-                  option={plateauTags.map((t) => t.explanation)}
-                  onChange={(value) => handlePlateauTagChange(index, value)}
-                />
-              </td>
+              <td className="px-6 py-4 whitespace-nowrap">{'Generic属性'}</td>
               <td className="px-6 py-4 whitespace-nowrap">
                 <TextInput
                   value={attributeNames[index]}

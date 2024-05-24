@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import "./App.css";
 import FileUploader from "./components/FileUploader";
 import { processGMLData } from "./scripts/dataProcessing";
-import { xmlValidate } from "./pyodyteJs";
+import { xmlValidate } from "./scripts/pyodyteJs";
 import { analyzeString } from "./scripts/analysis";
 import TagsComboBox from "./components/TagsComboBox";
 import DataTagTable from "./components/DataTagTable";
@@ -78,13 +78,17 @@ function App() {
 
   return (
     <div>
+      <header className="bg-[#463C64] text-white text-center py-4">
+        <h1 className="text-2xl font-bold">PLATEAUデータリンクアプリ</h1>
+      </header>
       <div className="container mx-auto p-4 flex justify-between">
         <div className="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4 w-1/2 mr-2">
           <h2 className="block text-gray-700 text-xl font-bold mb-2">
             PLATEAU
           </h2>
           <p className="block text-gray-700 text-sm font-bold mb-2">
-            CityGMLをアップロード
+            CityGMLをアップロード<br />
+            ※ファイル形式：GML
           </p>
           <FileUploader
             onTagsCollected={handlePlateauTagsCollected}
@@ -103,7 +107,8 @@ function App() {
             紐づけたいデータ
           </h2>
           <p className="block text-gray-700 text-sm font-bold mb-2">
-            任意のファイルをアップロード
+            任意のファイルをアップロード<br />
+            ※ファイル形式：GML, XML, CSV, JSON
           </p>
           <FileUploader
             onTagsCollected={handleAnyDataTagsCollected}
@@ -125,7 +130,7 @@ function App() {
         />
       </div>
 
-      <div className="flex justify-center mt-4">
+      {/* <div className="flex justify-center mt-4">
         <button
           className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
           onClick={() => {
@@ -134,11 +139,11 @@ function App() {
         >
           関数テスト
         </button>
-      </div>
+      </div> */}
 
-      <div className="flex justify-center mt-4">
+      <div className="flex justify-center mt-4 mb-4">
         <button
-          className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+          className="bg-[#01BEBF] hover:bg-[#019A9A] text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
           onClick={() =>
             processGMLData(
               plateauXmlObject,
@@ -152,14 +157,14 @@ function App() {
           データを紐づける
         </button>
       </div>
-      <div className="flex justify-center mt-4">
+      {/* <div className="flex justify-center mt-4">
         <button
           className="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
           onClick={xmlValidate}
         >
           PLATEAU品質評価
         </button>
-      </div>
+      </div> */}
     </div>
   );
 }

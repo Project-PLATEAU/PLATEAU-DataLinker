@@ -175,7 +175,7 @@ export function traverseCityGML(
  */
 export function matchPairs(traverseResults: any[], matchingValues: any[]): any[] {
   const pairs: any[] = [];
-  
+
   if (hasNullValues(traverseResults) || hasNullValues(matchingValues)) {
     console.error("null値が含まれています。");
     return [];

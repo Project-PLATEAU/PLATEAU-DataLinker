@@ -27,9 +27,13 @@ const FileUploader: React.FC<FileUploaderProps> = ({
    * ファイルがアップロードされたときに呼び出されるハンドラ
    * @param {React.ChangeEvent<HTMLInputElement>} event - ファイル入力の変更イベント
    */
-  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const selectedFile = event.target.files ? event.target.files[0] : null;
-    setUploadedFile(selectedFile);
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      setUploadedFile(file);
+      const mimeType = await getFileMimeType(file);
+      handleFileProcessing(file, mimeType);
+    }
   };
 
   /**
@@ -91,7 +95,7 @@ const FileUploader: React.FC<FileUploaderProps> = ({
         parseCSVFile(file);
         break;
       default:
-        alert("サポートされていないファイル形式です。");
+        alert("サ��ートされていないファイル形式です。");
         break;
     }
   };
@@ -175,6 +179,11 @@ const FileUploader: React.FC<FileUploaderProps> = ({
     const tags = new Set<string>();
 
     const traverseXML = (obj: any) => {
+      if (obj.hasOwnProperty('core:cityObjectMember')) {
+        tags.add('core:cityObjectMember');
+      }
+
+      
       if (obj && typeof obj === "object") {
         Object.entries(obj).forEach(([key, value]) => {
           if (Array.isArray(value)) {
@@ -234,45 +243,21 @@ const FileUploader: React.FC<FileUploaderProps> = ({
     return fileType;
   };
 
-  /**
-   * ファイルを解析するボタンを押したときのハンドラ
-   */
-  const handleParseButtonClick = async () => {
-    if (!uploadedFile) {
-      alert("ファイルがアップロードされていません。");
-      return;
-    }
-
-    try {
-      const mimeType = await getFileMimeType(uploadedFile);
-      handleFileProcessing(uploadedFile, mimeType);
-    } catch (error) {
-      alert("ファイルの読み込みに失敗しました。");
-      console.error(error);
-    }
-  };
-
   return (
     <div>
-      <input
-        id="file-upload-left"
-        type="file"
-        accept={accept}
+      <div>
+      <label htmlFor="file-input" className="sr-only">Choose file</label>
+      <input 
+        type="file" 
+        name="file-input" 
+        id="file-input" 
         onChange={handleFileUpload}
         multiple={false}
-        className="mb-4"
-      />
-
-      <div className="flex items-center justify-between mb-4">
-        <button
-          className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
-          type="button"
-          onClick={handleParseButtonClick}
-        >
-          読み込む
-        </button>
+        accept={accept}
+        className="mb-4 block w-full border border-gray-200 shadow-sm rounded-lg text-md focus:z-10 focus:border-blue-500 focus:ring-blue-500 disabled:opacity-50 disabled:pointer-events-none file:bg-[#01BEBF] file:border-0 file:me-4 file:py-1 file:text-white"/>
       </div>
     </div>
+    
   );
 };
 
