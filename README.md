@@ -1,46 +1,40 @@
-# Getting Started with Create React App
+# 概要
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+このアプリは、PLATEAUデータと任意のデータをアップロードし、任意のデータの特定要素をPLATEAUデータに追加することができます。
 
-## Available Scripts
+## 利用の流れ
+追加するにはそれぞれのデータにおけるキーとなるタグを選択します。  
+選択するタグがキーとなるかは、事前にデータを見比べる等してあたりをつけておく必要があります。データを見比べるにはメモ帳などのテキストエディタで可能です。  
 
-In the project directory, you can run:
+紐づけるににあたり、任意のデータの追加したいタグを選択し、属性名を入れることでPLATEAUのGenric属性として追加可能になります。
 
-### `npm start`
+追加が成功すると自動的にCityGMLがファイルダウンロードされます。追加されているかはデータを見比べる際と同様にメモ帳などのテキストエディタで確認可能です。
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
+- **ファイルアップロード**: `FileUploader`コンポーネントを使用して、ユーザーがGML、XML、CSV、JSONファイルをアップロードします。
+- **タグの収集**: アップロードされたファイルからタグを収集し、`TagsComboBox`コンポーネントで表示します。
+- **データの紐づけ**: 選択されたタグとデータを基に、`processGMLData`関数を使用してデータを紐づけます。
 
-The page will reload if you make edits.\
-You will also see any lint errors in the console.
 
-### `npm test`
+## アプリの処理フロー
+1. **ファイルのアップロード**:
+    - `FileUploader`コンポーネントでファイルを選択し、`handleFileUpload`関数でファイルを処理します。
+    - ファイルのMIMEタイプを取得し、適切な解析関数（`parseJSONFile`, `parseXMLFile`, `parseCSVFile`）を呼び出します。
+    - タグを収集し、`onTagsCollected`コールバックで親コンポーネントに通知します。
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+2. **タグの表示と選択**:
+    - `TagsComboBox`コンポーネントで収集されたタグを表示し、ユーザーがタグを選択します。
+    - 選択されたタグは`handlePlateauTagSelected`や`handleAnyDataTagSelected`で状態管理されます。
 
-### `npm run build`
+3. **データの紐づけ**:
+    - `DataTagTable`コンポーネントで任意のデータタグとPLATEAUタグを紐づけるためのUIを提供します。
+    - ユーザーがタグと属性名を入力し、`handleSelectedTagsChange`で選択されたデータを管理します。
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+4. **データの処理**:
+    - `processGMLData`関数で、選択されたタグとデータを基にGMLデータを処理し、建物要素を更新します。
+    - 更新されたGMLデータをXML形式でダウンロードします。
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+## マッチングアルゴリズム
+現状対応しているのは座標（経緯度）になります。
+PLATEAUにおける建物あたりの経緯度（LOD0）は建物の外周座標点（緯度、経度、標高）のリストになっています。任意のデータの座標がそのリストの範囲内に入っているかを判定してマッチングを行なっています。
 
-### `npm run eject`
-
-**Note: this is a one-way operation. Once you `eject`, you can’t go back!**
-
-If you aren’t satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
-
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you’re on your own.
-
-You don’t have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn’t feel obligated to use this feature. However we understand that this tool wouldn’t be useful if you couldn’t customize it when you are ready for it.
-
-## Learn More
-
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
-
-To learn React, check out the [React documentation](https://reactjs.org/).
