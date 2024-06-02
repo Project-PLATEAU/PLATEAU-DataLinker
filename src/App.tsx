@@ -7,12 +7,15 @@ import { xmlValidate } from "./scripts/pyodyteJs";
 import { analyzeString } from "./scripts/analysis";
 import TagsComboBox from "./components/TagsComboBox";
 import DataTagTable from "./components/DataTagTable";
+import CsvDataItemTable from "./components/CsvDataItemTable";
+import { processCsvData } from "./scripts/csvProcess";
 
 /**
  * メインのアプリケーションコンポーネント
  * PLATEAUと任意のデータをアップロードし、タグを選択してデータを紐づけるUIを提供します。
  */
 function App() {
+  const [mode, setMode] = useState('GML');
   const [plateauTags, setPlateauTags] = useState<string[]>([]);
   const [anyDataTags, setAnyDataTags] = useState<string[]>([]);
   const [plateauXmlObject, setPlateauXmlObject] = useState<any>(null);
@@ -20,6 +23,7 @@ function App() {
   const [selectedPlateauTag, setSelectedPlateauTag] = useState<string>("");
   const [selectedAnyDataTag, setSelectedAnyDataTag] = useState<string>("");
   const [selectedData, setSelectedData] = useState<{ tag: string; plateauTag: string; attributeName: string }[]>([]);
+  const [selectedCsvData, setSelectedCsvData] = useState<{tag: string; index: number }[]>([]);
 
   /**
    * PLATEAUのタグが収集されたときに呼ばれるハンドラー
@@ -76,6 +80,14 @@ function App() {
   const handleSelectedTagsChange = (selectedData: { tag: string; plateauTag: string; attributeName: string }[]) => {
     setSelectedData(selectedData);
   };
+
+    /**
+   * 選択されたタグの変更をハンドルする
+   * @param selectedCsvData 選択されたデータの配列
+   */
+    const handleSelectedCsvTagsChange = (selectedCsvData: { tag: string; index: number }[]) => {
+      setSelectedCsvData(selectedCsvData);
+    };
 
   return (
     <div>
@@ -142,6 +154,7 @@ function App() {
         </button>
       </div> */}
 
+{mode === 'GML' && (
       <div className="flex justify-center mt-4 mb-4">
         <button
           className="bg-[#01BEBF] hover:bg-[#019A9A] text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
@@ -158,6 +171,46 @@ function App() {
           データを紐づける
         </button>
       </div>
+)}
+
+      <div className="container mx-auto p-4 flex justify-center">
+        <div className="flex items-center space-x-4">
+          <label htmlFor="mode-select" className="text-gray-700 font-bold">モード選択:</label>
+          <select
+            id="mode-select"
+            className="border border-gray-300 rounded-md p-2"
+            onChange={(e) => setMode(e.target.value)}
+          >
+            <option value="GML">GMLモード</option>
+            <option value="CSV">CSVモード</option>
+          </select>
+        </div>
+      </div>
+
+      {mode === 'CSV' && (
+        <div>
+        <div className="container mx-auto p-4">
+          <CsvDataItemTable
+            anyDataTags={plateauTags}
+            onSelectedTagsChange={handleSelectedCsvTagsChange}
+            />
+          </div>
+          <div className="flex justify-center mt-4 mb-4">
+        <button
+          className="bg-[#01BEBF] hover:bg-[#019A9A] text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+          onClick={() =>
+            processCsvData(
+              plateauXmlObject,
+              selectedCsvData
+            )
+          }
+        >
+          CSVとして出力する
+        </button>
+      </div>
+        </div>
+      )}
+
       {/* <div className="flex justify-center mt-4">
         <button
           className="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
@@ -171,3 +224,4 @@ function App() {
 }
 
 export default App;
+
