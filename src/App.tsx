@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import "./App.css";
+import PlateauFileUploader from "./components/PlateauFileUploader";
 import FileUploader from "./components/FileUploader";
 import { processGMLData } from "./scripts/dataProcessing";
 import { xmlValidate } from "./scripts/pyodyteJs";
@@ -90,7 +91,7 @@ function App() {
             CityGMLをアップロード<br />
             ※ファイル形式：GML
           </p>
-          <FileUploader
+          <PlateauFileUploader
             onTagsCollected={handlePlateauTagsCollected}
             onDataParsed={handlePlateauParsed}
             accept=".gml"

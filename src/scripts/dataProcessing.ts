@@ -1,5 +1,5 @@
 // src/scripts/dataProcessing.ts
-import { traverse, traverseCityGML, matchPairs } from "./utilities";
+import { traverse, traverseCityGML, matchPairs } from './utilities';
 import { XMLBuilder } from "fast-xml-parser";
 /**
  * GMLデータを処理し、建物要素を更新します。
@@ -19,14 +19,19 @@ export function processGMLData(
 ) {
 
   if (gmlObject && typeof gmlObject === "object") {
+
     const cityObjectMembers = extractCityObjectMembers(gmlObject);
-    const traverseResults = cityObjectMembers.map((member: any) =>
+
+
+    const traverseCityGmlResults = cityObjectMembers.map((member: any) =>
       traverseCityGML(member, str1)
     );
 
-    let averageValue2 = traverse(gmlObject2, str2);
- 
-    const pairs = matchPairs(traverseResults, averageValue2);
+
+    let traverseResults = traverse(gmlObject2, str2);
+    
+    const pairs = matchPairs(traverseCityGmlResults, traverseResults);
+
     if (pairs.length === 0) {
       alert("紐づけできませんでした。適切なペアが見つかりません。");
       return;
@@ -39,7 +44,7 @@ export function processGMLData(
       selectedData
     );
 
-    console.log(updatedGmlObject["core:CityModel"]["core:cityObjectMember"]);
+    // console.log(updatedGmlObject["core:CityModel"]["core:cityObjectMember"]);
 
     const options = {
       ignoreAttributes: false,

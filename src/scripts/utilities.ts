@@ -26,7 +26,12 @@ function hasNullValues(array: any[]): boolean {
  * @returns 有効であれば true、それ以外は false
  */
 function isValidTraverseResult(obj: any): boolean {
-  return obj && isObject(obj.result) && obj.result !== null && obj.result.max !== null;
+  return (
+    obj &&
+    isObject(obj.result) &&
+    obj.result !== null &&
+    obj.result.max !== null
+  );
 }
 
 /**
@@ -54,7 +59,9 @@ function isWithinRange(value: number, min: number, max: number): boolean {
  * @param values - 数値配列
  * @returns 最小値と最大値のオブジェクト、または null
  */
-function getMinMaxOrNull(values: number[]): { min: number; max: number } | null {
+function getMinMaxOrNull(
+  values: number[]
+): { min: number; max: number } | null {
   return values.length >= 2 ? getMinMaxValues(values) : null;
 }
 
@@ -95,7 +102,6 @@ export function traverse(obj: any, targetKey: string): any[] {
 
   // objがtargetKeyを持ち、その値が配列の場合
   if (obj.hasOwnProperty(targetKey) && Array.isArray(obj[targetKey])) {
-
     // 配列の各要素に対して数値ペアの合計を計算
     const sumList = calculateSumPairs(obj[targetKey]);
     // 各配列の長さに応じて単一の数値または数値配列を取得
@@ -104,16 +110,25 @@ export function traverse(obj: any, targetKey: string): any[] {
     valuesList.push({ primeKey, result: obj });
   }
 
-  
   // オブジェクトがtargetKeyを持ち、その値が文字列の場合
   if (obj.hasOwnProperty(targetKey) && typeof obj[targetKey] === "string") {
-    // 文字列から数値ペアの合計を計算
-    const sumList = calculateSumOfNumericPairsFromString(obj[targetKey]);
-    // 配列の長さに応じて単一の数値または数値配列を取得
-    const primeKey = adjustArrayOrSingleValue(sumList);
-
-    // 結果をvaluesListに追加
-    valuesList.push({ primeKey, result: obj });
+    
+    // 文字列がカンマ区切りまたは半角スペース区切りの数値かどうかを判定
+    const regex = /^(\d+(\.\d+)?([, ]\d+(\.\d+)?)+)$/;
+    if (regex.test(obj[targetKey])) {
+        const numericValues = obj[targetKey].split(/[, ]/).map(Number);
+        if (numericValues.every((value: number) => !isNaN(value))) {
+          // 文字列から数値ペアの合計を計算
+            const sumList = calculateSumPairs(numericValues);
+            // 配列の長さに応じて単一の数値または数値配列を取得
+            const primeKey = adjustArrayOrSingleValue(sumList);
+            valuesList.push({ primeKey, result: obj });
+           
+        }
+    }else{
+        const primeKey = obj[targetKey];
+        valuesList.push({ primeKey, result: obj });
+    }
   }
 
   // オブジェクトの各値を再帰的に処理
@@ -140,30 +155,69 @@ export function traverseCityGML(
   targetKey: string
 ): { result: any; gmlId: string | null } {
   let gmlId: string | null = null;
+  let result: any;
 
+  // オブジェクトでない場合は初期値を返す
   if (!isObject(obj)) {
     return { result: 0, gmlId };
   }
 
+  // "bldg:Building"キーが存在する場合、gmlIdを取得
   if (obj["bldg:Building"]) {
     gmlId = obj["bldg:Building"]["@_gml:id"];
   }
 
-  if (obj.hasOwnProperty(targetKey) && typeof obj[targetKey] === "string") {
-    const sumList = calculateSumOfNumericPairsFromString(obj[targetKey]);
-    const result = getMinMaxOrNull(sumList);
+  // GML ID
+  if (targetKey === "gml:id" && obj["bldg:Building"]) {
+    result = obj["bldg:Building"]["@_gml:id"];
     return { result, gmlId };
   }
 
+  // 建物の高さ
+  if (targetKey === "bldg:measuredHeight" && obj["bldg:measuredHeight"]) {
+    result = obj["bldg:measuredHeight"]["#text"];
+    return { result, gmlId };
+  }
+
+  // 建物の住所
+  if (targetKey === "xAL:LocalityName" && obj.hasOwnProperty(targetKey)) {
+    result = obj["xAL:LocalityName"]["#text"];
+    return { result, gmlId };
+  }
+
+  if (obj["@_name"] === targetKey) {
+    result = obj["gen:value"];
+    return { result, gmlId };
+  }
+
+  // targetKeyが存在し、その値が文字列の場合
+  if (obj.hasOwnProperty(targetKey) && typeof obj[targetKey] === "string") {
+    // targetKeyがgml:posListの場合の処理
+    if (targetKey === "gml:posList") {
+      // 文字列から数値ペアの合計を計算
+      const sumList = calculateSumOfNumericPairsFromString(obj[targetKey]);
+      // 最小値と最大値を取得
+      result = getMinMaxOrNull(sumList);
+    } else {
+      console.log(obj[targetKey]);
+    }
+
+    return { result, gmlId };
+  }
+
+  // オブジェクトの各値を再帰的に処理
   for (const value of Object.values(obj)) {
     if (isObject(value)) {
+      // 子オブジェクトの結果を取得
       const { result, gmlId: innerGmlId } = traverseCityGML(value, targetKey);
+      // 結果が初期値でない場合、結果を返す
       if (result !== 0) {
         return { gmlId: innerGmlId || gmlId, result };
       }
     }
   }
 
+  // 初期値を返す
   return { result: 0, gmlId };
 }
 
@@ -173,7 +227,10 @@ export function traverseCityGML(
  * @param matchingValues - マッチングする値の配列
  * @returns マッチングされたペアの配列
  */
-export function matchPairs(traverseResults: any[], matchingValues: any[]): any[] {
+export function matchPairs(
+  traverseResults: any[],
+  matchingValues: any[]
+): any[] {
   const pairs: any[] = [];
 
   if (hasNullValues(traverseResults) || hasNullValues(matchingValues)) {
@@ -182,10 +239,11 @@ export function matchPairs(traverseResults: any[], matchingValues: any[]): any[]
   }
 
   traverseResults.forEach((obj: any) => {
-    if (!isValidTraverseResult(obj)) {
-      console.error("traverseResultsの要素が不正です。");
-      return;
-    }
+    // if (!isValidTraverseResult(obj)) {
+    //   console.log(obj);
+    //   console.error("traverseResultsの要素が不正です。");
+    //   return;
+    // }
 
     matchingValues.forEach((mv: any) => {
       if (!isValidAverageValue(mv)) {
@@ -193,8 +251,14 @@ export function matchPairs(traverseResults: any[], matchingValues: any[]): any[]
         return;
       }
 
-      if (isWithinRange(mv.primeKey, obj.result.min, obj.result.max)) {
-        pairs.push({ gmlId: obj.gmlId, result: mv.result });
+      if (typeof obj.result !== "object") {
+        if (mv.primeKey === obj.result) {
+          pairs.push({ gmlId: obj.gmlId, result: mv.result });
+        }
+      } else if (typeof obj.result === "object") {
+        if (isWithinRange(mv.primeKey, obj.result.min, obj.result.max)) {
+          pairs.push({ gmlId: obj.gmlId, result: mv.result });
+        }
       }
     });
   });
@@ -221,7 +285,7 @@ function filterEveryThirdValue(values: number[]): number[] {
 }
 
 /**
- * 数値配列のペアの合計を計算します。
+ * 数値配列のペア��合計を計算します。
  * @param values - 数値配列
  * @returns 合計を含む配列
  */
