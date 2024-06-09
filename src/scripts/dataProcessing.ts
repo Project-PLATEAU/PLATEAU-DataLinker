@@ -59,6 +59,47 @@ export function processGMLData(
   }
 }
 
+export function processGMLDataforCsv(
+  gmlObject: any,
+  gmlObject2: any,
+  str1: string,
+  str2: string,
+  selectedData: { tag: string; plateauTag: string; attributeName: string }[]
+) {
+
+  if (gmlObject && typeof gmlObject === "object") {
+
+    const cityObjectMembers = extractCityObjectMembers(gmlObject);
+
+
+    const traverseCityGmlResults = cityObjectMembers.map((member: any) =>
+      traverseCityGML(member, str1)
+    );
+
+
+    let traverseResults = traverse(gmlObject2, str2);
+    
+    const pairs = matchPairs(traverseCityGmlResults, traverseResults);
+
+    if (pairs.length === 0) {
+      alert("紐づけできませんでした。適切なペアが見つかりません。");
+      return;
+    }
+
+    // gmlObjectの建物要素を更新する
+    const updatedGmlObject = updateBuildingElements(
+      gmlObject,
+      pairs,
+      selectedData
+    );
+
+    return updatedGmlObject;
+
+  }
+}
+
+
+
 /**
  * GMLオブジェクトからCityObjectMemberを抽出します。
  * 

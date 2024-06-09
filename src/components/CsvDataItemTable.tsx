@@ -49,16 +49,16 @@ const CsvDataItemTable: React.FC<CsvDataItemTableProps> = ({
   const [selectedData, setSelectedData] = useState<
     { tag: string; index: number }[]
   >([]);
-  const [attributeNames, setAttributeNames] = useState<string[]>(
-    new Array(anyDataTags.length).fill("")
-  );
+  // const [attributeNames, setAttributeNames] = useState<string[]>(
+  //   new Array(anyDataTags.length).fill("")
+  // );
 
   // anyDataTagsが変更されたときにselectedDataを初期化する
-  useMemo(() => {
-    setSelectedData([]);
-    setAttributeNames(new Array(anyDataTags.length).fill(""));
-    onSelectedTagsChange([]);
-  }, [anyDataTags]);
+  // useMemo(() => {
+  //   setSelectedData([]);
+  //   setAttributeNames(new Array(anyDataTags.length).fill(""));
+  //   onSelectedTagsChange([]);
+  // }, [anyDataTags]);
 
   // チェックボックスの変更を処理する関数
   /**

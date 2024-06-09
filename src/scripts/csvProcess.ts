@@ -1,11 +1,6 @@
-import { XMLParser } from "fast-xml-parser";
-
 // CSVデータを処理する関数
 export function processCsvData(xmlObject: any, selectedCsvData: { tag: string; index: number }[]): void {
-  // XMLパーサーのインスタンスを作成
-  const parser = new XMLParser({ ignoreAttributes: false });
-  // XMLデータをパース
-  const parsedXml = parser.parse(xmlObject);
+
   // 選択されたCSVデータのタグを抽出
   const tagMap: { [key: string]: string } = {
     "gml:id": "GML ID",
@@ -19,6 +14,7 @@ export function processCsvData(xmlObject: any, selectedCsvData: { tag: string; i
 
   const tags = selectedCsvData.map(data => data.tag);
   const headerTags = selectedCsvData.map(data => tagMap[data.tag] || data.tag);
+
   // CSVのヘッダー行を作成
   const rows: string[][] = [headerTags];
 
@@ -72,8 +68,6 @@ export function processCsvData(xmlObject: any, selectedCsvData: { tag: string; i
   // CSVコンテンツを生成
   const csvContent = rows.map(e => e.join(",")).join("\n");
   // CSVコンテンツをダウンロードする関数を呼び出す
-  console.log(csvContent);
-
   downloadCsvContent(csvContent, "Result.csv");
 }
 

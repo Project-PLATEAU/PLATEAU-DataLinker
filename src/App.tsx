@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import "./App.css";
 import PlateauFileUploader from "./components/PlateauFileUploader";
 import FileUploader from "./components/FileUploader";
-import { processGMLData } from "./scripts/dataProcessing";
+import { processGMLData, processGMLDataforCsv } from "./scripts/dataProcessing";
 import { xmlValidate } from "./scripts/pyodyteJs";
 import { analyzeString } from "./scripts/analysis";
 import TagsComboBox from "./components/TagsComboBox";
@@ -15,15 +15,23 @@ import { processCsvData } from "./scripts/csvProcess";
  * PLATEAUと任意のデータをアップロードし、タグを選択してデータを紐づけるUIを提供します。
  */
 function App() {
-  const [mode, setMode] = useState('GML');
+  const [mode, setMode] = useState("GML");
   const [plateauTags, setPlateauTags] = useState<string[]>([]);
   const [anyDataTags, setAnyDataTags] = useState<string[]>([]);
   const [plateauXmlObject, setPlateauXmlObject] = useState<any>(null);
   const [anyDataXmlObject, setAnyDataXmlObject] = useState<any>(null);
   const [selectedPlateauTag, setSelectedPlateauTag] = useState<string>("");
   const [selectedAnyDataTag, setSelectedAnyDataTag] = useState<string>("");
-  const [selectedData, setSelectedData] = useState<{ tag: string; plateauTag: string; attributeName: string }[]>([]);
-  const [selectedCsvData, setSelectedCsvData] = useState<{tag: string; index: number }[]>([]);
+  const [selectedData, setSelectedData] = useState<
+    { tag: string; plateauTag: string; attributeName: string }[]
+  >([]);
+  const [selectedCsvData, setSelectedCsvData] = useState<
+    { tag: string; index: number }[]
+  >([]);
+  const [plateauXmlObjectForCsv, setPlateauXmlObjectForCsv] =
+    useState<any>(null);
+  const [tagsForCsv, setTagsForCsv] = useState<string[]>([]);
+
 
   /**
    * PLATEAUのタグが収集されたときに呼ばれるハンドラー
@@ -77,17 +85,23 @@ function App() {
    * 選択されたタグの変更をハンドルする
    * @param selectedData 選択されたデータの配列
    */
-  const handleSelectedTagsChange = (selectedData: { tag: string; plateauTag: string; attributeName: string }[]) => {
+  const handleSelectedTagsChange = (
+    selectedData: { tag: string; plateauTag: string; attributeName: string }[]
+  ) => {
     setSelectedData(selectedData);
   };
 
-    /**
+  /**
    * 選択されたタグの変更をハンドルする
    * @param selectedCsvData 選択されたデータの配列
    */
-    const handleSelectedCsvTagsChange = (selectedCsvData: { tag: string; index: number }[]) => {
-      setSelectedCsvData(selectedCsvData);
-    };
+  const handleSelectedCsvTagsChange = (
+    selectedCsvData: { tag: string; index: number }[]
+  ) => {
+    setSelectedCsvData(selectedCsvData);
+  };
+
+
 
   return (
     <div>
@@ -100,7 +114,8 @@ function App() {
             PLATEAU
           </h2>
           <p className="block text-gray-700 text-sm font-bold mb-2">
-            CityGMLをアップロード<br />
+            CityGMLをアップロード
+            <br />
             ※ファイル形式：GML
           </p>
           <PlateauFileUploader
@@ -120,7 +135,8 @@ function App() {
             紐づけたいデータ
           </h2>
           <p className="block text-gray-700 text-sm font-bold mb-2">
-            任意のファイルをアップロード<br />
+            任意のファイルをアップロード
+            <br />
             ※ファイル形式：GML, XML, CSV, JSON
           </p>
           <FileUploader
@@ -143,71 +159,84 @@ function App() {
         />
       </div>
 
-      {/* <div className="flex justify-center mt-4">
-        <button
-          className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
-          onClick={() => {
-            console.log(selectedData);
-          }}
-        >
-          関数テスト
-        </button>
-      </div> */}
-
-{mode === 'GML' && (
-      <div className="flex justify-center mt-4 mb-4">
-        <button
-          className="bg-[#01BEBF] hover:bg-[#019A9A] text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
-          onClick={() =>
-            processGMLData(
-              plateauXmlObject,
-              anyDataXmlObject,
-              selectedPlateauTag,
-              selectedAnyDataTag,
-              selectedData
-            )
-          }
-        >
-          データを紐づける
-        </button>
-      </div>
-)}
-
       <div className="container mx-auto p-4 flex justify-center">
         <div className="flex items-center space-x-4">
-          <label htmlFor="mode-select" className="text-gray-700 font-bold">モード選択:</label>
+          <label htmlFor="mode-select" className="text-gray-700 font-bold">
+            出力モード選択:
+          </label>
           <select
             id="mode-select"
             className="border border-gray-300 rounded-md p-2"
             onChange={(e) => setMode(e.target.value)}
           >
-            <option value="GML">GMLモード</option>
-            <option value="CSV">CSVモード</option>
+            <option value="GML">GML</option>
+            <option value="CSV">CSV</option>
           </select>
         </div>
       </div>
 
-      {mode === 'CSV' && (
+      {mode === "GML" && (
+        <div className="flex justify-center mt-4 mb-4">
+          <button
+            className="bg-[#01BEBF] hover:bg-[#019A9A] text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+            onClick={() =>
+              processGMLData(
+                plateauXmlObject,
+                anyDataXmlObject,
+                selectedPlateauTag,
+                selectedAnyDataTag,
+                selectedData
+              )
+            }
+          >
+            データを紐づける
+          </button>
+        </div>
+      )}
+
+      {mode === "CSV" && (
         <div>
-        <div className="container mx-auto p-4">
-          <CsvDataItemTable
-            anyDataTags={plateauTags}
-            onSelectedTagsChange={handleSelectedCsvTagsChange}
+                  <div className="flex justify-center mt-4 mb-4">
+          <button
+            className="bg-[#01BEBF] hover:bg-[#019A9A] text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+            onClick={() => {
+              const xmlContent = processGMLDataforCsv(
+                plateauXmlObject,
+                anyDataXmlObject,
+                selectedPlateauTag,
+                selectedAnyDataTag,
+                selectedData
+              );
+              if (xmlContent) {
+                const attributeNames = selectedData.map(data => data.attributeName);
+                setTagsForCsv(plateauTags.concat(attributeNames));
+                setPlateauXmlObjectForCsv(xmlContent);
+
+              }
+            }}
+          >
+            データを紐づける
+          </button>
+        </div>
+          <div className="container mx-auto p-4">
+            <CsvDataItemTable
+              anyDataTags={tagsForCsv}
+              onSelectedTagsChange={handleSelectedCsvTagsChange}
             />
           </div>
           <div className="flex justify-center mt-4 mb-4">
-        <button
-          className="bg-[#01BEBF] hover:bg-[#019A9A] text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
-          onClick={() =>
-            processCsvData(
-              plateauXmlObject,
-              selectedCsvData
-            )
-          }
-        >
-          CSVとして出力する
-        </button>
-      </div>
+            <button
+              className="bg-[#01BEBF] hover:bg-[#019A9A] text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+              onClick={() =>
+                processCsvData(
+                  plateauXmlObjectForCsv,
+                  selectedCsvData
+                )
+              }
+            >
+              CSVとして出力する
+            </button>
+          </div>
         </div>
       )}
 
@@ -224,4 +253,3 @@ function App() {
 }
 
 export default App;
-
