@@ -233,8 +233,9 @@ export function matchPairs(
 ): any[] {
   const pairs: any[] = [];
 
-  if (hasNullValues(traverseResults) || hasNullValues(matchingValues)) {
-    console.error("null値が含まれています。");
+  if (traverseResults.every((obj: any) => obj.gmlId === null || obj.result === null) ||
+      matchingValues.every((mv: any) => mv.primeKey === null)) {
+    console.error("すべての値がnullです。");
     return [];
   }
 
@@ -285,7 +286,7 @@ function filterEveryThirdValue(values: number[]): number[] {
 }
 
 /**
- * 数値配列のペア��合計を計算します。
+ * 数値配列のペア合計を計算します。
  * @param values - 数値配列
  * @returns 合計を含む配列
  */
