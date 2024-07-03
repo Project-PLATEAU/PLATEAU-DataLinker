@@ -106,12 +106,12 @@ function App() {
   return (
     <div>
       <header className="bg-[#463C64] text-white text-center py-4">
-        <h1 className="text-2xl font-bold">PLATEAUデータリンクアプリ</h1>
+        <h1 className="text-2xl font-bold">PLATEAU DataLinker</h1>
       </header>
       <div className="container mx-auto p-4 flex justify-between">
         <div className="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4 w-1/2 mr-2">
           <h2 className="block text-gray-700 text-xl font-bold mb-2">
-            PLATEAU
+            ①PLATEAU
           </h2>
           <p className="block text-gray-700 text-sm font-bold mb-2">
             CityGMLをアップロード
@@ -132,7 +132,7 @@ function App() {
 
         <div className="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4 w-1/2 ml-2">
           <h2 className="block text-gray-700 text-xl font-bold mb-2">
-            紐づけたいデータ
+            ②紐づけたいデータ
           </h2>
           <p className="block text-gray-700 text-sm font-bold mb-2">
             任意のファイルをアップロード
@@ -153,6 +153,9 @@ function App() {
       </div>
 
       <div className="container mx-auto p-4">
+        <h2 className="block text-gray-700 text-xl font-bold mb-2">
+          ③「紐づけたいデータ」から追加したい属性を選択し、属性名を記入してください
+        </h2>
         <DataTagTable
           anyDataTags={anyDataTags}
           onSelectedTagsChange={handleSelectedTagsChange}

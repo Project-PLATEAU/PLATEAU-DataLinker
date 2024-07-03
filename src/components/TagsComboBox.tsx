@@ -47,7 +47,7 @@ const TagsComboBox: React.FC<TagsComboBoxProps> = ({ tags, selectedTag, onTagSel
         size={4}
       >
         {tags.map((tag, index) => (
-          <option key={index} value={tag}>
+          <option title={tag} key={index} value={tag}>
             {tagTranslations[tag] || tag}
           </option>
         ))}
