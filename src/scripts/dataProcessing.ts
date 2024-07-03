@@ -138,7 +138,6 @@ function updateBuildingElements(
   const clonedGmlObject = JSON.parse(JSON.stringify(gmlObject));
 
   // pairs配列をループして各ペアに対する処理を行う
-
   pairs.forEach((pair: any) => {
     // clonedGmlObjectから建物要素を抽出
     const buildingElements = clonedGmlObject["core:CityModel"][
@@ -148,20 +147,34 @@ function updateBuildingElements(
         member["bldg:Building"] &&
         member["bldg:Building"]["@_gml:id"] === pair.gmlId
     );
-
     // 抽出した建物要素に対して処理を行う
     // 各建物要素に対して処理を行う
     buildingElements.forEach((buildingElement: any) => {
       // 選択されたデータの配列をループ
       selectedData.forEach((data) => {
+
+        
         // ペアの結果にデータタグが存在するか確認
-        if (pair.result[data.tag]) {
-          // 建物要素の指定されたPLATEAUタグに新しい属性を追加
-          buildingElement["bldg:Building"][data.plateauTag].push({
-            "@_name": data.attributeName, // 属性名を設定
-            "gen:value": pair.result[data.tag], // ペアの結果から値を設定
-          });
-        }
+if (pair.result[data.tag]) {
+  // bldg:Buildingオブジェクトが存在するか確認
+  if (!buildingElement["bldg:Building"]) {
+    buildingElement["bldg:Building"] = {};
+  }
+
+  // gen:stringAttributeが存在しない場合は初期化
+  if (!buildingElement["bldg:Building"]["gen:stringAttribute"]) {
+    buildingElement["bldg:Building"]["gen:stringAttribute"] = [];
+  } else if (!Array.isArray(buildingElement["bldg:Building"]["gen:stringAttribute"])) {
+    // gen:stringAttributeが配列でない場合、既存のデータを保持したまま配列に変換
+    buildingElement["bldg:Building"]["gen:stringAttribute"] = [buildingElement["bldg:Building"]["gen:stringAttribute"]];
+  }
+
+  // 建物要素の指定されたPLATEAUタグに新しい属性を追加
+  buildingElement["bldg:Building"]["gen:stringAttribute"].push({
+    "@_name": data.attributeName, // 属性名を設定
+    "gen:value": pair.result[data.tag], // ペアの結果から値を設定
+  });
+}
       });
     });
   });
