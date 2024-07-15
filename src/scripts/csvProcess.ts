@@ -60,7 +60,7 @@ export function processCsvData(xmlObject: any, selectedCsvData: { tag: string; i
     const row: string[] = [];
     for (const tag of tags) {
       const result = traverse(obj, tag);
-      if (result) row.push(result);
+      row.push(result !== null ? result : ""); // 値がnullの場合は空白を追加
     }
     rows.push(row);
   }

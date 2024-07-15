@@ -27,10 +27,11 @@ export function processGMLData(
       traverseCityGML(member, str1)
     );
 
-
     let traverseResults = traverse(gmlObject2, str2);
+    console.log(traverseResults);
     
     const pairs = matchPairs(traverseCityGmlResults, traverseResults);
+
 
     if (pairs.length === 0) {
       alert("紐づけできませんでした。適切なペアが見つかりません。");

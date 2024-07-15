@@ -84,6 +84,21 @@ function calculateSumOfNumericPairsFromString(value: string): number[] {
   return calculateSumPairs(numericValues);
 }
 
+/**
+ * 文字列を数値化し、経緯度のリストを作成します。
+ * @param value - 数値を含む文字列
+ * @returns [[経度, 緯度], [経度, 緯度], ...]の形の配列
+ */
+function convertStringToCoordinatePairs(value: string): [number, number][] {
+  const numericValues = convertStringToNumericArray(value);
+  if (numericValues.length % 3 === 0) {
+    const filteredValues = filterEveryThirdValue(numericValues);
+    return convertToCoordinatePairs(filteredValues);
+  } else {
+    return convertToCoordinatePairs(numericValues);
+  }
+}
+
 // メイン関数
 /**
  * オブジェクトを再帰的にトラバースし、指定されたキーを持つオブジェクトを収集します。
@@ -109,25 +124,24 @@ export function traverse(obj: any, targetKey: string): any[] {
     // 結果をvaluesListに追加
     valuesList.push({ primeKey, result: obj });
   }
-
   // オブジェクトがtargetKeyを持ち、その値が文字列の場合
   if (obj.hasOwnProperty(targetKey) && typeof obj[targetKey] === "string") {
-    
     // 文字列がカンマ区切りまたは半角スペース区切りの数値かどうかを判定
     const regex = /^(\d+(\.\d+)?([, ]\d+(\.\d+)?)+)$/;
     if (regex.test(obj[targetKey])) {
-        const numericValues = obj[targetKey].split(/[, ]/).map(Number);
-        if (numericValues.every((value: number) => !isNaN(value))) {
-          // 文字列から数値ペアの合計を計算
-            const sumList = calculateSumPairs(numericValues);
-            // 配列の長さに応じて単一の数値または数値配列を取得
-            const primeKey = adjustArrayOrSingleValue(sumList);
-            valuesList.push({ primeKey, result: obj });
-           
-        }
-    }else{
-        const primeKey = obj[targetKey];
+      const numericValues = obj[targetKey].split(/[, ]/).map(Number);
+      if (numericValues.every((value: number) => !isNaN(value))) {
+        // 配列の長さに応じて単一の数値または数値配列を取得
+        const primeKey = adjustArrayOrSingleValue(numericValues);
         valuesList.push({ primeKey, result: obj });
+      }
+    } else {
+      // 文字列がクオーテーションで囲まれている場合、クオーテーションを削除
+      if (obj[targetKey].includes('"')) {
+        obj[targetKey] = obj[targetKey].replace(/"/, "");
+      }
+      const primeKey = obj[targetKey].split(/[, ]+/);
+      valuesList.push({ primeKey, result: obj });
     }
   }
 
@@ -162,7 +176,7 @@ export function traverseCityGML(
     return { result: 0, gmlId };
   }
 
-  // "bldg:Building"キーが存在する場合、gmlIdを取得
+  // "bldg:Building"キーが存在する場合��gmlIdを取得
   if (obj["bldg:Building"]) {
     gmlId = obj["bldg:Building"]["@_gml:id"];
   }
@@ -195,9 +209,11 @@ export function traverseCityGML(
     // targetKeyがgml:posListの場合の処理
     if (targetKey === "gml:posList") {
       // 文字列から数値ペアの合計を計算
-      const sumList = calculateSumOfNumericPairsFromString(obj[targetKey]);
-      // 最小値と最大値を取得
-      result = getMinMaxOrNull(sumList);
+      result = convertStringToCoordinatePairs(obj[targetKey]);
+
+      // const sumList = calculateSumOfNumericPairsFromString(obj[targetKey]);
+      // // 最小値と最大値を取得
+      // result = getMinMaxOrNull(sumList);
     } else {
       console.log(obj[targetKey]);
     }
@@ -233,8 +249,12 @@ export function matchPairs(
 ): any[] {
   const pairs: any[] = [];
 
-  if (traverseResults.every((obj: any) => obj.gmlId === null || obj.result === null) ||
-      matchingValues.every((mv: any) => mv.primeKey === null)) {
+  if (
+    traverseResults.every(
+      (obj: any) => obj.gmlId === null || obj.result === null
+    ) ||
+    matchingValues.every((mv: any) => mv.primeKey === null)
+  ) {
     console.error("すべての値がnullです。");
     return [];
   }
@@ -251,13 +271,12 @@ export function matchPairs(
         console.error("matchingValuesの要素が不正です。");
         return;
       }
-
       if (typeof obj.result !== "object") {
         if (mv.primeKey === obj.result) {
           pairs.push({ gmlId: obj.gmlId, result: mv.result });
         }
       } else if (typeof obj.result === "object") {
-        if (isWithinRange(mv.primeKey, obj.result.min, obj.result.max)) {
+        if (isPointInPolygon(mv.primeKey, obj.result)) {
           pairs.push({ gmlId: obj.gmlId, result: mv.result });
         }
       }
@@ -319,5 +338,46 @@ function calculateSumPairs(numericValues: number[]): number[] {
   const valuesToSum = isDivisibleByThree
     ? filterEveryThirdValue(numericValues)
     : numericValues;
+
   return calculateSumForValuePairs(valuesToSum);
+}
+
+/**
+ * 数値配列を[[経度, 緯度], [経度, 緯度], ...]の形に変換します。
+ * @param values - 数値配列
+ * @returns [[経度, 緯度], [経度, 緯度], ...]の形の配列
+ */
+function convertToCoordinatePairs(values: number[]): [number, number][] {
+  const coordinatePairs: [number, number][] = [];
+  for (let i = 0; i < values.length; i += 2) {
+    if (values[i + 1] !== undefined) {
+      coordinatePairs.push([values[i], values[i + 1]]);
+    }
+  }
+  return coordinatePairs;
+}
+
+/**
+ * 多角形の中���特定の点が含まれているかを判定します。（いわゆる交差数判定
+ * @param point - 判定する点 [経度, 緯度]
+ * @param polygon - 多角形を構成する点のリスト [[経度, 緯度], [経度, 緯度], ...]
+ * @returns 点が多角形の中に含まれている場合はtrue、そうでない場合はfalse
+ */
+function isPointInPolygon(
+  point: [number, number],
+  polygon: [number, number][]
+): boolean {
+  let isInside = false; // 点が多角形の内部にあるかどうかを示すフラグ
+  const [x, y] = point; // 判定する点の座標を分割代入
+
+  for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
+    const [xi, yi] = polygon[i]; // 現在の頂点の座標
+    const [xj, yj] = polygon[j]; // 前の頂点の座標
+    // 点が多角形の辺を横切るかどうかを判定
+    const intersect =
+      yi > y !== yj > y && x < ((xj - xi) * (y - yi)) / (yj - yi) + xi;
+    if (intersect) isInside = !isInside; // 横切る場合、フラグを反転
+  }
+  // console.log(isInside);
+  return isInside; // 点が多角形の内部にある場合はtrueを返す
 }
