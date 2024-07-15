@@ -136,11 +136,12 @@ export function traverse(obj: any, targetKey: string): any[] {
         valuesList.push({ primeKey, result: obj });
       }
     } else {
+      let cleansedValue = obj[targetKey];
       // 文字列がクオーテーションで囲まれている場合、クオーテーションを削除
-      if (obj[targetKey].includes('"')) {
-        obj[targetKey] = obj[targetKey].replace(/"/, "");
+      if (cleansedValue.includes('"')) {
+        cleansedValue = cleansedValue.replace(/"/g, "");
       }
-      const primeKey = obj[targetKey].split(/[, ]+/);
+      const primeKey = cleansedValue.split(/[, ]+/);
       valuesList.push({ primeKey, result: obj });
     }
   }
@@ -176,7 +177,7 @@ export function traverseCityGML(
     return { result: 0, gmlId };
   }
 
-  // "bldg:Building"キーが存在する場合��gmlIdを取得
+  // "bldg:Building"キーが存在する場合gmlIdを取得
   if (obj["bldg:Building"]) {
     gmlId = obj["bldg:Building"]["@_gml:id"];
   }
@@ -243,10 +244,10 @@ export function traverseCityGML(
  * @param matchingValues - マッチングする値の配列
  * @returns マッチングされたペアの配列
  */
-export function matchPairs(
+export async function matchPairs(
   traverseResults: any[],
   matchingValues: any[]
-): any[] {
+): Promise<any[]> {
   const pairs: any[] = [];
 
   if (
@@ -259,30 +260,33 @@ export function matchPairs(
     return [];
   }
 
-  traverseResults.forEach((obj: any) => {
-    // if (!isValidTraverseResult(obj)) {
-    //   console.log(obj);
-    //   console.error("traverseResultsの要素が不正です。");
-    //   return;
-    // }
+  await Promise.all(
+    traverseResults.map(async (obj: any) => {
+      // if (!isValidTraverseResult(obj)) {
+      //   console.log(obj);
+      //   console.error("traverseResultsの要素が不正です。");
+      //   return;
+      // }
 
-    matchingValues.forEach((mv: any) => {
-      if (!isValidAverageValue(mv)) {
-        console.error("matchingValuesの要素が不正です。");
-        return;
-      }
-      if (typeof obj.result !== "object") {
-        if (mv.primeKey === obj.result) {
-          pairs.push({ gmlId: obj.gmlId, result: mv.result });
-        }
-      } else if (typeof obj.result === "object") {
-        if (isPointInPolygon(mv.primeKey, obj.result)) {
-          pairs.push({ gmlId: obj.gmlId, result: mv.result });
-        }
-      }
-    });
-  });
-
+      await Promise.all(
+        matchingValues.map(async (mv: any) => {
+          if (!isValidAverageValue(mv)) {
+            console.error("matchingValuesの要素が不正です。");
+            return;
+          }
+          if (typeof obj.result !== "object") {
+            if (mv.primeKey === obj.result) {
+              pairs.push({ gmlId: obj.gmlId, result: mv.result });
+            }
+          } else if (typeof obj.result === "object") {
+            if (isPointInPolygon(mv.primeKey, obj.result)) {
+              pairs.push({ gmlId: obj.gmlId, result: mv.result });
+            }
+          }
+        })
+      );
+    })
+  );
   return pairs;
 }
 
@@ -358,7 +362,7 @@ function convertToCoordinatePairs(values: number[]): [number, number][] {
 }
 
 /**
- * 多角形の中���特定の点が含まれているかを判定します。（いわゆる交差数判定
+ * 多角形の中に特定の点が含まれているかを判定します。（いわゆる交差数判定
  * @param point - 判定する点 [経度, 緯度]
  * @param polygon - 多角形を構成する点のリスト [[経度, 緯度], [経度, 緯度], ...]
  * @returns 点が多角形の中に含まれている場合はtrue、そうでない場合はfalse
@@ -378,6 +382,5 @@ function isPointInPolygon(
       yi > y !== yj > y && x < ((xj - xi) * (y - yi)) / (yj - yi) + xi;
     if (intersect) isInside = !isInside; // 横切る場合、フラグを反転
   }
-  // console.log(isInside);
   return isInside; // 点が多角形の内部にある場合はtrueを返す
 }

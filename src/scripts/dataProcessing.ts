@@ -10,84 +10,65 @@ import { XMLBuilder } from "fast-xml-parser";
  * @param str2 - 2番目の検索文字列
  * @param selectedData - 更新に使用するデータの配列
  */
-export function processGMLData(
+export async function processGMLData(
   gmlObject: any,
   gmlObject2: any,
   str1: string,
   str2: string,
   selectedData: { tag: string; plateauTag: string; attributeName: string }[]
 ) {
-
   if (gmlObject && typeof gmlObject === "object") {
-
     const cityObjectMembers = extractCityObjectMembers(gmlObject);
-
-
     const traverseCityGmlResults = cityObjectMembers.map((member: any) =>
       traverseCityGML(member, str1)
     );
-
-    let traverseResults = traverse(gmlObject2, str2);
-    console.log(traverseResults);
-    
-    const pairs = matchPairs(traverseCityGmlResults, traverseResults);
-
+    const traverseResults = await traverse(gmlObject2, str2);
+     
+    const pairs: any[] = await matchPairs(traverseCityGmlResults, traverseResults);
+       
 
     if (pairs.length === 0) {
       alert("紐づけできませんでした。適切なペアが見つかりません。");
       return;
     }
 
-    // gmlObjectの建物要素を更新する
     const updatedGmlObject = updateBuildingElements(
       gmlObject,
       pairs,
       selectedData
     );
 
-    // console.log(updatedGmlObject["core:CityModel"]["core:cityObjectMember"]);
-
     const options = {
       ignoreAttributes: false,
       format: true,
     };
-    
     const builder = new XMLBuilder(options);
-
     const xmlContent = builder.build(updatedGmlObject);
     downloadXMLContent(xmlContent, "Result.gml");
-
   }
 }
 
-export function processGMLDataforCsv(
+export async function processGMLDataforCsv(
   gmlObject: any,
   gmlObject2: any,
   str1: string,
   str2: string,
   selectedData: { tag: string; plateauTag: string; attributeName: string }[]
 ) {
-
   if (gmlObject && typeof gmlObject === "object") {
-
     const cityObjectMembers = extractCityObjectMembers(gmlObject);
-
-
     const traverseCityGmlResults = cityObjectMembers.map((member: any) =>
       traverseCityGML(member, str1)
     );
+    let traverseResults = await traverse(gmlObject2, str2);
 
-
-    let traverseResults = traverse(gmlObject2, str2);
-    
-    const pairs = matchPairs(traverseCityGmlResults, traverseResults);
+    const pairs: any[] = await matchPairs(traverseCityGmlResults, traverseResults);
 
     if (pairs.length === 0) {
       alert("紐づけできませんでした。適切なペアが見つかりません。");
       return;
     }
 
-    // gmlObjectの建物要素を更新する
     const updatedGmlObject = updateBuildingElements(
       gmlObject,
       pairs,
@@ -95,11 +76,8 @@ export function processGMLDataforCsv(
     );
 
     return updatedGmlObject;
-
   }
 }
-
-
 
 /**
  * GMLオブジェクトからCityObjectMemberを抽出します。
@@ -140,6 +118,7 @@ function updateBuildingElements(
 
   // pairs配列をループして各ペアに対する処理を行う
   pairs.forEach((pair: any) => {
+    
     // clonedGmlObjectから建物要素を抽出
     const buildingElements = clonedGmlObject["core:CityModel"][
       "core:cityObjectMember"
@@ -148,34 +127,35 @@ function updateBuildingElements(
         member["bldg:Building"] &&
         member["bldg:Building"]["@_gml:id"] === pair.gmlId
     );
+
     // 抽出した建物要素に対して処理を行う
     // 各建物要素に対して処理を行う
     buildingElements.forEach((buildingElement: any) => {
+
       // 選択されたデータの配列をループ
       selectedData.forEach((data) => {
 
-        
         // ペアの結果にデータタグが存在するか確認
-if (pair.result[data.tag]) {
-  // bldg:Buildingオブジェクトが存在するか確認
-  if (!buildingElement["bldg:Building"]) {
-    buildingElement["bldg:Building"] = {};
-  }
+        if (pair.result[data.tag]) {
+          // bldg:Buildingオブジェクトが存在するか確認
+          if (!buildingElement["bldg:Building"]) {
+            buildingElement["bldg:Building"] = {};
+          }
 
-  // gen:stringAttributeが存在しない場合は初期化
-  if (!buildingElement["bldg:Building"]["gen:stringAttribute"]) {
-    buildingElement["bldg:Building"]["gen:stringAttribute"] = [];
-  } else if (!Array.isArray(buildingElement["bldg:Building"]["gen:stringAttribute"])) {
-    // gen:stringAttributeが配列でない場合、既存のデータを保持したまま配列に変換
-    buildingElement["bldg:Building"]["gen:stringAttribute"] = [buildingElement["bldg:Building"]["gen:stringAttribute"]];
-  }
+          // gen:stringAttributeが存在しない場合は初期化
+          if (!buildingElement["bldg:Building"]["gen:stringAttribute"]) {
+            buildingElement["bldg:Building"]["gen:stringAttribute"] = [];
+          } else if (!Array.isArray(buildingElement["bldg:Building"]["gen:stringAttribute"])) {
+            // gen:stringAttributeが配列でない場合、既存のデータを保持したまま配列に変換
+            buildingElement["bldg:Building"]["gen:stringAttribute"] = [buildingElement["bldg:Building"]["gen:stringAttribute"]];
+          }
 
-  // 建物要素の指定されたPLATEAUタグに新しい属性を追加
-  buildingElement["bldg:Building"]["gen:stringAttribute"].push({
-    "@_name": data.attributeName, // 属性名を設定
-    "gen:value": pair.result[data.tag], // ペアの結果から値を設定
-  });
-}
+          // 建物要素の指定されたPLATEAUタグに新しい属性を追加
+          buildingElement["bldg:Building"]["gen:stringAttribute"].push({
+            "@_name": data.attributeName, // 属性名を設定
+            "gen:value": pair.result[data.tag], // ペアの結果から値を設定
+          });
+        }
       });
     });
   });

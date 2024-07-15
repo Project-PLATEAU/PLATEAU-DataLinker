@@ -211,10 +211,13 @@ function App() {
                 selectedData
               );
               if (xmlContent) {
-                const attributeNames = selectedData.map(data => data.attributeName);
-                setTagsForCsv(plateauTags.concat(attributeNames));
-                setPlateauXmlObjectForCsv(xmlContent);
-
+                xmlContent.then((resolvedXmlContent) => {
+                  const attributeNames = selectedData.map(data => data.attributeName);
+                  setTagsForCsv(plateauTags.concat(attributeNames));
+                  setPlateauXmlObjectForCsv(resolvedXmlContent);
+                }).catch((error) => {
+                  console.error("XML content processing failed:", error);
+                });
               }
             }}
           >
