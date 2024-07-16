@@ -144,11 +144,11 @@ const FileUploader: React.FC<FileUploaderProps> = ({
   const parseCSVFile = (file: File) => {
     parseFile(file, (csvData) => {
       const rows = csvData.split('\n').map(row => row.split(','));
-      const tags = rows[0];
+      const tags = rows[0].map(tag => tag.replace(/"/g, '')); // タグからダブルクォーテーションを削除
       onTagsCollected(tags);
       const data = rows.slice(1).map(row => {
         return row.reduce<{ [key: string]: string }>((acc, cur, index) => {
-          acc[tags[index]] = cur;
+          acc[tags[index]] = cur.replace(/"/g, ''); // データからダブルクォーテーションを削除
           return acc;
         }, {});
       });
