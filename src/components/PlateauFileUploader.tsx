@@ -88,26 +88,39 @@ const PlateauFileUploader: React.FC<PlateauFileUploaderProps> = ({
    * @param {any} data - タグを収集するデータ
    * @param {boolean} isXML - データがXMLかどうか
    */
+  /**
+   * データからタグを収集する関数
+   * @param {any} data - タグを収集するデータ
+   * @param {boolean} isXML - データがXMLかどうか
+   */
   const collectTags = (data: any, isXML: boolean) => {
 
+    // タグを格納するSetを作成
     const tags = new Set<string>();
+    // デフォルトのタグを追加
     const defaultTags = ["gml:id", "gml:posList", "bldg:measuredHeight", "xAL:LocalityName"];
     defaultTags.forEach(tag => tags.add(tag));
-
-
+    let beforeTags = "";
+    /**
+     * XMLデータを再帰的にトラバースしてタグを収集する関数
+     * @param {any} obj - トラバースするオブジェクト
+     */
     const traverseXML = (obj: any) => {
+      // 'core:cityObjectMember'が存在する場合、タグに追加
       if (obj.hasOwnProperty('core:cityObjectMember')) {
         tags.add('core:cityObjectMember');       
       }
 
-
+      // オブジェクトを再帰的にトラバース
       if (obj && typeof obj === "object") {
         Object.entries(obj).forEach(([key, value]) => {       
+
           if (Array.isArray(value)) {
             value.forEach((item) => traverseXML(item));
           } else {
             if (key === "@_name") {
-              tags.add(String(value));
+              beforeTags = 'gen:stringAttribute name="' + String(value) + '"';
+              tags.add(String(beforeTags));
             }
             if (typeof value === "object") {
               traverseXML(value);
@@ -117,7 +130,12 @@ const PlateauFileUploader: React.FC<PlateauFileUploaderProps> = ({
       }
     };
 
+    /**
+     * JSONデータを再帰的にトラバースしてタグを収集する関数
+     * @param {any} obj - トラバースするオブジェクト
+     */
     const traverseJSON = (obj: any) => {
+      // オブジェクトを再帰的にトラバース
       if (obj && typeof obj === "object") {
         Object.entries(obj).forEach(([key, value]) => {
           if (typeof value !== "object" || value === null) {
@@ -134,12 +152,15 @@ const PlateauFileUploader: React.FC<PlateauFileUploaderProps> = ({
       }
     };
 
+    // データがXMLかJSONかによって適切なトラバース関数を呼び出す
     if (isXML) {
       traverseXML(data);
     } else {
       traverseJSON(data);
     }
 
+    
+    // 収集したタグをコールバック関数に渡す
     onTagsCollected(Array.from(tags));
   };
 
