@@ -98,7 +98,7 @@ const PlateauFileUploader: React.FC<PlateauFileUploaderProps> = ({
     // タグを格納するSetを作成
     const tags = new Set<string>();
     // デフォルトのタグを追加
-    const defaultTags = ["gml:id", "gml:posList", "bldg:measuredHeight", "xAL:LocalityName"];
+    const defaultTags = ["gml:id", "gml:posList", "bldg:measuredHeight", "xAL:LocalityName", "uro:buildingID"];
     defaultTags.forEach(tag => tags.add(tag));
     let beforeTags = "";
     /**
@@ -118,6 +118,9 @@ const PlateauFileUploader: React.FC<PlateauFileUploaderProps> = ({
           if (Array.isArray(value)) {
             value.forEach((item) => traverseXML(item));
           } else {
+            if (value === "建物ID") {
+              return; // valueが建物IDだった場合は処理をスキップ
+            }
             if (key === "@_name") {
               beforeTags = 'gen:stringAttribute name="' + String(value) + '"';
               tags.add(String(beforeTags));

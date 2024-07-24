@@ -216,7 +216,7 @@ export function traverseCityGML(
       // // 最小値と最大値を取得
       // result = getMinMaxOrNull(sumList);
     } else {
-      console.log(obj[targetKey]);
+      result = obj[targetKey];
     }
 
     return { result, gmlId };
@@ -267,15 +267,15 @@ export async function matchPairs(
       //   console.error("traverseResultsの要素が不正です。");
       //   return;
       // }
-
       await Promise.all(
         matchingValues.map(async (mv: any) => {
+          
           if (!isValidAverageValue(mv)) {
             console.error("matchingValuesの要素が不正です。");
             return;
           }
           if (typeof obj.result !== "object") {
-            if (mv.primeKey === obj.result) {
+            if (mv.primeKey[0] === obj.result) {          
               pairs.push({ gmlId: obj.gmlId, result: mv.result });
             }
           } else if (typeof obj.result === "object") {

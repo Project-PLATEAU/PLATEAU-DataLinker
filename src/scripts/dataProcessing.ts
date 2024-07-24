@@ -23,7 +23,7 @@ export async function processGMLData(
       traverseCityGML(member, str1)
     );
     const traverseResults = await traverse(gmlObject2, str2);
-     
+    
     const pairs: any[] = await matchPairs(traverseCityGmlResults, traverseResults);
        
 
