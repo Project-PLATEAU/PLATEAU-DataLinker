@@ -1,4 +1,5 @@
-import React, { useState, useMemo } from "react";
+import React, { useState } from "react";
+import tagTranslations from "../constants/tagTranslations";
 
 // プロパティの型定義
 interface CsvDataItemTableProps {
@@ -39,26 +40,9 @@ const CsvDataItemTable: React.FC<CsvDataItemTableProps> = ({
   anyDataTags,
   onSelectedTagsChange,
 }) => {
-  const tagTranslations: { [key: string]: string } = {
-    "gml:id": "GML ID",
-    "gml:posList": "建物の座標",
-    "bldg:measuredHeight": "建物の高さ",
-    "xAL:LocalityName": "建物の住所",
-  };
-
   const [selectedData, setSelectedData] = useState<
     { tag: string; index: number }[]
   >([]);
-  // const [attributeNames, setAttributeNames] = useState<string[]>(
-  //   new Array(anyDataTags.length).fill("")
-  // );
-
-  // anyDataTagsが変更されたときにselectedDataを初期化する
-  // useMemo(() => {
-  //   setSelectedData([]);
-  //   setAttributeNames(new Array(anyDataTags.length).fill(""));
-  //   onSelectedTagsChange([]);
-  // }, [anyDataTags]);
 
   // チェックボックスの変更を処理する関数
   /**
