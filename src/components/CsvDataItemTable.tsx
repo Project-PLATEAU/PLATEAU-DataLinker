@@ -44,6 +44,12 @@ const CsvDataItemTable: React.FC<CsvDataItemTableProps> = ({
     { tag: string; index: number }[]
   >([]);
 
+  // タグの変換関数
+  const transformTag = (tag: string): string => {
+    const match = tag.match(/gen:stringAttribute name="(.+?)"/);
+    return match ? match[1] : tag;
+  };
+
   // チェックボックスの変更を処理する関数
   /**
    * チェックボックスの状態が変更されたときに呼び出される関数
@@ -61,14 +67,16 @@ const CsvDataItemTable: React.FC<CsvDataItemTableProps> = ({
     index: number;
   }) => {
     let updatedSelectedData = [...selectedData];
+   
+    const transformedTag = transformTag(tag);
     if (isChecked) {
       updatedSelectedData.push({
-        tag,
+        tag: transformedTag,
         index,
       });
     } else {
       updatedSelectedData = updatedSelectedData.filter(
-        (data) => data.tag !== tag
+        (data) => data.tag !== transformedTag
       );
     }
     setSelectedData(updatedSelectedData);
@@ -100,25 +108,28 @@ const CsvDataItemTable: React.FC<CsvDataItemTableProps> = ({
           </tr>
         </thead>
         <tbody className="bg-white divide-y divide-gray-200">
-          {anyDataTags.map((tag, index) => (
-            <tr key={index}>
-              <td className="px-6 py-4 whitespace-nowrap">
-                <Checkbox
-                  checked={selectedData.some((data) => data.tag === tag)}
-                  onChange={(e) =>
-                    handleCheckboxChange({
-                      tag,
-                      isChecked: e.target.checked,
-                      index,
-                    })
-                  }
-                />
-              </td>
-              <td className="px-6 py-4 whitespace-nowrap">
-                {tagTranslations[tag] || tag}
-              </td>
-            </tr>
-          ))}
+          {anyDataTags.map((tag, index) => {
+            const transformedTag = transformTag(tag);
+            return (
+              <tr key={index}>
+                <td className="px-6 py-4 whitespace-nowrap">
+                  <Checkbox
+                    checked={selectedData.some((data) => data.tag === transformedTag)}
+                    onChange={(e) =>
+                      handleCheckboxChange({
+                        tag,
+                        isChecked: e.target.checked,
+                        index,
+                      })
+                    }
+                  />
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap">
+                  {tagTranslations[transformedTag] || transformedTag}
+                </td>
+              </tr>
+            );
+          })}
         </tbody>
       </table>
     </div>

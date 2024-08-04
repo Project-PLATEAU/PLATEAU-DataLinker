@@ -5,7 +5,8 @@ import FileUploader from "./components/FileUploader";
 import { processGMLData, processGMLDataforCsv } from "./scripts/dataProcessing";
 import { xmlValidate } from "./scripts/pyodyteJs";
 import { analyzeString } from "./scripts/analysis";
-import TagsComboBox from "./components/TagsComboBox";
+import PlateauTagsComboBox from "./components/PlateauTagsComboBox";
+import AnyDataTagsComboBox from "./components/AnyDataTagsComboBox";
 import DataTagTable from "./components/DataTagTable";
 import CsvDataItemTable from "./components/CsvDataItemTable";
 import { processCsvData } from "./scripts/csvProcess";
@@ -123,7 +124,7 @@ function App() {
             onDataParsed={handlePlateauParsed}
             accept=".gml"
           />
-          <TagsComboBox
+          <PlateauTagsComboBox
             tags={plateauTags}
             selectedTag={selectedPlateauTag}
             onTagSelected={handlePlateauTagSelected}
@@ -144,7 +145,7 @@ function App() {
             onDataParsed={handleAnyDataParsed}
             accept=".gml,.xml,.csv,.json,.geojson"
           />
-          <TagsComboBox
+          <AnyDataTagsComboBox
             tags={anyDataTags}
             selectedTag={selectedAnyDataTag}
             onTagSelected={handleAnyDataTagSelected}
@@ -203,19 +204,27 @@ function App() {
           <button
             className="bg-[#01BEBF] hover:bg-[#019A9A] text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
             onClick={() => {
+              // processGMLDataforCsv関数を呼び出し、GMLデータと任意のデータを処理する
               const xmlContent = processGMLDataforCsv(
-                plateauXmlObject,
-                anyDataXmlObject,
-                selectedPlateauTag,
-                selectedAnyDataTag,
-                selectedData
+                plateauXmlObject,       // PLATEAUのXMLオブジェクト
+                anyDataXmlObject,       // 任意のデータのXMLオブジェクト
+                selectedPlateauTag,     // 選択されたPLATEAUのタグ
+                selectedAnyDataTag,     // 選択された任意のデータのタグ
+                selectedData            // 選択されたデータの配列
               );
+            
+              // xmlContentが存在する場合、Promiseが返される
               if (xmlContent) {
+                // Promiseが解決されたときの処理
                 xmlContent.then((resolvedXmlContent) => {
+                  // selectedDataからattributeNameを抽出し、plateauTagsに追加する
                   const attributeNames = selectedData.map(data => data.attributeName);
                   setTagsForCsv(plateauTags.concat(attributeNames));
+            
+                  // 解決されたXMLコンテンツをplateauXmlObjectForCsvに設定する
                   setPlateauXmlObjectForCsv(resolvedXmlContent);
                 }).catch((error) => {
+                  // エラーが発生した場合の処理
                   console.error("XML content processing failed:", error);
                 });
               }
