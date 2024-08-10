@@ -1,14 +1,14 @@
 import React, { useState } from "react";
 import "./App.css";
+// components
 import PlateauFileUploader from "./components/PlateauFileUploader";
-import FileUploader from "./components/FileUploader";
-import { processGMLData, processGMLDataforCsv } from "./scripts/dataProcessing";
-import { xmlValidate } from "./scripts/pyodyteJs";
-import { analyzeString } from "./scripts/analysis";
+import AnyDataFileUploader from "./components/AnyDataFileUploader";
 import PlateauTagsListBox from "./components/PlateauTagsListBox";
 import AnyDataTagsListBox from "./components/AnyDataTagsListBox";
-import DataTagTable from "./components/DataTagTable";
-import CsvDataItemTable from "./components/CsvDataItemTable";
+import LinkDataTable from "./components/LinkDataTable";
+import CsvLinkDataTable from "./components/CsvLinkDataTable";
+// scripts
+import { processGMLData, processGMLDataforCsv } from "./scripts/dataProcessing";
 import { processCsvData } from "./scripts/csvProcess";
 
 /**
@@ -140,7 +140,7 @@ function App() {
             <br />
             ※ファイル形式：GML, XML, CSV, JSON
           </p>
-          <FileUploader
+          <AnyDataFileUploader
             onTagsCollected={handleAnyDataTagsCollected}
             onDataParsed={handleAnyDataParsed}
             accept=".gml,.xml,.csv,.json,.geojson"
@@ -157,7 +157,7 @@ function App() {
         <h2 className="block text-gray-700 text-xl font-bold mb-2">
           ③「紐づけたいデータ」から追加したい属性を選択し、属性名を記入してください
         </h2>
-        <DataTagTable
+        <LinkDataTable
           anyDataTags={anyDataTags}
           onSelectedTagsChange={handleSelectedTagsChange}
         />
@@ -234,7 +234,7 @@ function App() {
           </button>
         </div>
           <div className="container mx-auto p-4">
-            <CsvDataItemTable
+            <CsvLinkDataTable
               anyDataTags={tagsForCsv}
               onSelectedTagsChange={handleSelectedCsvTagsChange}
             />
