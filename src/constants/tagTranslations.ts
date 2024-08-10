@@ -1,7 +1,7 @@
 const tagTranslations: { [key: string]: string } = {
   "core:creationDate": "データ作成日",
   "core:terminationDate": "データ削除日",
-  "gml:id": "GML ID",
+  "bldg:Building[@gml:id]": "GML ID",
   "uro:buildingID": "建物ID",
   "gml:posList": "建物の座標(経度、緯度)",
   "bldg:measuredHeight": "建物の高さ(m)",
@@ -30,7 +30,8 @@ const tagTranslations: { [key: string]: string } = {
 
 
 export const ALLOWED_KEYS = [
-  "gml:id",
+  "gen:stringAttribute[@name]",
+  "bldg:Building[@gml:id]",
   "uro:buildingID",
   "gml:posList",
   "bldg:measuredHeight",

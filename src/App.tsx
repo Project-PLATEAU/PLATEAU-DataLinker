@@ -5,8 +5,8 @@ import FileUploader from "./components/FileUploader";
 import { processGMLData, processGMLDataforCsv } from "./scripts/dataProcessing";
 import { xmlValidate } from "./scripts/pyodyteJs";
 import { analyzeString } from "./scripts/analysis";
-import PlateauTagsComboBox from "./components/PlateauTagsComboBox";
-import AnyDataTagsComboBox from "./components/AnyDataTagsComboBox";
+import PlateauTagsListBox from "./components/PlateauTagsListBox";
+import AnyDataTagsListBox from "./components/AnyDataTagsListBox";
 import DataTagTable from "./components/DataTagTable";
 import CsvDataItemTable from "./components/CsvDataItemTable";
 import { processCsvData } from "./scripts/csvProcess";
@@ -71,7 +71,7 @@ function App() {
    * @param tag 選択されたタグ
    */
   const handlePlateauTagSelected = (tag: string) => {
-    setSelectedPlateauTag(tag);
+    setSelectedPlateauTag(tag);  
   };
 
   /**
@@ -124,7 +124,7 @@ function App() {
             onDataParsed={handlePlateauParsed}
             accept=".gml"
           />
-          <PlateauTagsComboBox
+          <PlateauTagsListBox
             tags={plateauTags}
             selectedTag={selectedPlateauTag}
             onTagSelected={handlePlateauTagSelected}
@@ -145,7 +145,7 @@ function App() {
             onDataParsed={handleAnyDataParsed}
             accept=".gml,.xml,.csv,.json,.geojson"
           />
-          <AnyDataTagsComboBox
+          <AnyDataTagsListBox
             tags={anyDataTags}
             selectedTag={selectedAnyDataTag}
             onTagSelected={handleAnyDataTagSelected}

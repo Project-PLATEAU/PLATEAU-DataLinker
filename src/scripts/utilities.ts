@@ -12,29 +12,6 @@ function isObject(value: any): boolean {
 }
 
 /**
- * 配列内に null 値を持つオブジェクトが含まれているかを判定します。
- * @param array - 判定する配列
- * @returns null 値が含まれていれば true、それ以外は false
- */
-function hasNullValues(array: any[]): boolean {
-  return array.some((obj: any) => obj.gmlId === null || obj.result === null);
-}
-
-/**
- * traverse 関数の結果が有効かどうかを判定します。
- * @param obj - 判定するオブジェクト
- * @returns 有効であれば true、それ以外は false
- */
-function isValidTraverseResult(obj: any): boolean {
-  return (
-    obj &&
-    isObject(obj.result) &&
-    obj.result !== null &&
-    obj.result.max !== null
-  );
-}
-
-/**
  * matchingValues の要素が有効かどうかを判定します。
  * @param mv - 判定するオブジェクト
  * @returns 有効であれば true、それ以外は false
@@ -44,44 +21,12 @@ function isValidAverageValue(mv: any): boolean {
 }
 
 /**
- * 値が指定された範囲内にあるかどうかを判定します。
- * @param value - 判定する値
- * @param min - 範囲の最小値
- * @param max - 範囲の最大値
- * @returns 範囲内であれば true、それ以外は false
- */
-function isWithinRange(value: number, min: number, max: number): boolean {
-  return value >= min && value <= max;
-}
-
-/**
- * 数値配列から最小値と最大値を取得します。配列の長さが2未満の場合は null を返します。
- * @param values - 数値配列
- * @returns 最小値と最大値のオブジェクト、または null
- */
-function getMinMaxOrNull(
-  values: number[]
-): { min: number; max: number } | null {
-  return values.length >= 2 ? getMinMaxValues(values) : null;
-}
-
-/**
  * 配列の長さが1の場合、その要素を返します。それ以外の場合は配列をそのまま返します。
  * @param values - 数値配列
  * @returns 単一の数値または数値配列
  */
 function adjustArrayOrSingleValue(values: number[]): number | number[] {
   return values.length === 1 ? values[0] : values;
-}
-
-/**
- * 文字列から数値ペアの合計を計算します。
- * @param value - 数値を含む文字列
- * @returns 数値ペアの合計を含む配列
- */
-function calculateSumOfNumericPairsFromString(value: string): number[] {
-  const numericValues = convertStringToNumericArray(value);
-  return calculateSumPairs(numericValues);
 }
 
 /**
@@ -291,15 +236,6 @@ export async function matchPairs(
 }
 
 /**
- * 数値配列から最小値と最大値を取得します。
- * @param values - 数値配列
- * @returns 最小値と最大値のオブジェクト
- */
-function getMinMaxValues(values: number[]): { min: number; max: number } {
-  return { min: Math.min(...values), max: Math.max(...values) };
-}
-
-/**
  * 配列から3番目以降の要素を削除します。
  * @param values - 配列
  * @returns 新しい配列
@@ -379,8 +315,30 @@ function isPointInPolygon(
     const [xj, yj] = polygon[j]; // 前の頂点の座標
     // 点が多角形の辺を横切るかどうかを判定
     const intersect =
-      yi > y !== yj > y && x < ((xj - xi) * (y - yi)) / (yj - yi) + xi;
+      (yi > y) !== (yj > y) && x < ((xj - xi) * (y - yi)) / (yj - yi) + xi;
     if (intersect) isInside = !isInside; // 横切る場合、フラグを反転
   }
   return isInside; // 点が多角形の内部にある場合はtrueを返す
 }
+
+/**
+ * 入力された[数値, 数値]が[経度, 緯度]か[緯度, 経度]かを判定し、[緯度, 経度]の形式に変換します。
+ * @param coordinates - [数値, 数値]の形式の座標
+ * @returns [緯度, 経度]の形式の座標
+ */
+function normalizeCoordinates(coordinates: [number, number]): [number, number] {
+  const [first, second] = coordinates;
+  
+  // 経度の範囲は-180から180、緯度の範囲は-90から90
+  const isFirstLongitude = Math.abs(first) <= 180;
+  const isSecondLatitude = Math.abs(second) <= 90;
+
+  if (isFirstLongitude && isSecondLatitude) {
+    // 入力が[経度, 緯度]の場合、順序を入れ替えて返す
+    return [second, first];
+  } else {
+    // 入力が既に[緯度, 経度]の場合、そのまま返す
+    return [first, second];
+  }
+}
+

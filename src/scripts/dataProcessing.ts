@@ -17,13 +17,18 @@ export async function processGMLData(
   str2: string,
   selectedData: { tag: string; plateauTag: string; attributeName: string }[]
 ) {
+console.log(gmlObject);
+
+
   if (gmlObject && typeof gmlObject === "object") {
     const cityObjectMembers = extractCityObjectMembers(gmlObject);
     const traverseCityGmlResults = cityObjectMembers.map((member: any) =>
       traverseCityGML(member, str1)
     );
     const traverseResults = await traverse(gmlObject2, str2);
-    
+
+
+
     const pairs: any[] = await matchPairs(traverseCityGmlResults, traverseResults);
        
 
