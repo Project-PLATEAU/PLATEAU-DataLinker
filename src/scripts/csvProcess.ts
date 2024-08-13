@@ -57,23 +57,29 @@ export function processCsvData(xmlObject: any, selectedCsvData: { tag: string; i
         // コードスペースがある場合
         if (tag.includes("@_") && Object.prototype.hasOwnProperty.call(value, "@_codeSpace")) {
           const splitTag = tag.split("=");
-          const key = splitTag[1];
+          const tagKey = splitTag[0].split("　")[0];
+          const tagValue = splitTag[1];
           const strictValue = value as { "#text": string , "@_codeSpace": string };
-          if (strictValue["@_codeSpace"] === key) {
+          
+          if (strictValue["@_codeSpace"] === tagValue && tagKey === key) {
             return strictValue["#text"];
           }
         }
 
         if (tag.includes("@_") && Object.prototype.hasOwnProperty.call(value, "@_uom")) {
           const splitTag = tag.split("=");
-          const key = splitTag[1];
+          const tagKey = splitTag[0].split("　")[0];
+          const tagValue = splitTag[1];
           const strictValue = value as { "#text": string , "@_uom": string };
-          if (strictValue["@_uom"] === key) {
+
+          if (strictValue["@_uom"] === tagValue && tagKey === key) {
+            console.log(strictValue["@_uom"], tagValue);
             return strictValue["#text"];
           }
         }
 
         if (typeof value === "string" && tag === value) {
+         
           return obj["gen:value"] as string;
         }
 
