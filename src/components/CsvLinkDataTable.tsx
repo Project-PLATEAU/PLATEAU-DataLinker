@@ -46,10 +46,32 @@ const CsvDataItemTable: React.FC<CsvDataItemTableProps> = ({
 
   // タグの変換関数
   const transformTag = (tag: string): string => {
-    const match = tag.match(/gen:stringAttribute name="(.+?)"/);
-    return match ? match[1] : tag;
+    if(tag.includes("　@_")) {
+      const splitTag = tag.split("　@_");
+      const key = splitTag[0];
+      const translationKey = tagTranslations[key];
+      if(tagTranslations[key] === undefined) {
+        return tag;
+      }
+      const value = translationKey + "　" + splitTag[1];
+
+      return value;
+    } else {
+      const match = tag.match(/gen:stringAttribute name="([^"]+)"/);
+      return match ? match[1] : tag;
+    }
   };
 
+  const attri = (tag: string): string => {
+    const match = tag.match(/gen:stringAttribute name="([^"]+)"/);
+    return match ? match[1] : tag;
+  }
+
+  const trans = (tag: string): string => {
+    const splitTag = tag.split("　@_");
+    const key = splitTag[0];
+    return key;
+  }
   // チェックボックスの変更を処理する関数
   /**
    * チェックボックスの状態が変更されたときに呼び出される関数
@@ -66,27 +88,52 @@ const CsvDataItemTable: React.FC<CsvDataItemTableProps> = ({
     isChecked: boolean;
     index: number;
   }) => {
+    // 現在の選択データのコピーを作成
     let updatedSelectedData = [...selectedData];
-   
-    const transformedTag = transformTag(tag);
+    // タグを変換
+    const transformedTag = attri(tag);
     if (isChecked) {
+
+      // チェックされた場合、新しいデータを追加
       updatedSelectedData.push({
         tag: transformedTag,
         index,
       });
     } else {
+      // チェックが外された場合、該当するデータを削除
       updatedSelectedData = updatedSelectedData.filter(
         (data) => data.tag !== transformedTag
       );
     }
+
+    // 状態を更新
     setSelectedData(updatedSelectedData);
+
+    // 親コンポーネントに変更を通知
     onSelectedTagsChange(updatedSelectedData);
+  };
+
+  // 全選択・全解除のハンドラー
+  const handleSelectAllToggle = () => {
+    if (selectedData.length === anyDataTags.length) {
+      // 全解除
+      setSelectedData([]);
+      onSelectedTagsChange([]);
+    } else {
+      // 全選択
+      const allSelectedData = anyDataTags.map((tag, index) => ({
+        tag: attri(tag),
+        index,
+      }));
+      setSelectedData(allSelectedData);
+      onSelectedTagsChange(allSelectedData);
+    }
   };
 
   return (
     <div
       className="shadow overflow-hidden border-b border-gray-200 sm:rounded-lg"
-      style={{ maxHeight: "260px", overflowY: "auto" }}
+      style={{ maxHeight: "500px", overflow: "auto" }}
     >
       <table className="min-w-full divide-y divide-gray-200">
         <thead
@@ -99,7 +146,10 @@ const CsvDataItemTable: React.FC<CsvDataItemTableProps> = ({
           }}
         >
           <tr>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+            <th
+              className="px-5 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
+              onClick={handleSelectAllToggle}
+            >
               選択
             </th>
             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -109,7 +159,7 @@ const CsvDataItemTable: React.FC<CsvDataItemTableProps> = ({
         </thead>
         <tbody className="bg-white divide-y divide-gray-200">
           {anyDataTags.map((tag, index) => {
-            const transformedTag = transformTag(tag);
+            const transformedTag = attri(tag);
             return (
               <tr key={index}>
                 <td className="px-6 py-4 whitespace-nowrap">
@@ -125,7 +175,7 @@ const CsvDataItemTable: React.FC<CsvDataItemTableProps> = ({
                   />
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
-                  {tagTranslations[transformedTag] || transformedTag}
+                  {tagTranslations[trans(transformedTag)] || transformedTag}
                 </td>
               </tr>
             );

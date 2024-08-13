@@ -34,20 +34,38 @@ const PlateauTagsComboBox: React.FC<TagsComboBoxProps> = ({
     
   };
 
+  // タグの変換関数
+  const transformTag = (tag: string): string => {
+    if(tag.includes("　@_")) {
+      const splitTag = tag.split("　@_");
+      const key = splitTag[0];
+      return key;
+    } else {
+      return tag;
+    }
+  };
+
   useEffect(() => {
     // 許可されたタグまたは特定のパターンに一致するタグをフィルタリング
     const filteredTags = tags.filter(
-      (tag) => ALLOWED_KEYS.includes(tag) || /gen:stringAttribute@[^"]+/.test(tag)
+      (tag) => ALLOWED_KEYS.includes(transformTag(tag)) || /gen:stringAttribute name="[^"]+"/.test(tag)
     );
 
     // 新しい翻訳を追加
     const newTranslations = { ...tagTranslations };
     filteredTags.forEach((tag) => {
-      const match = tag.match(/gen:stringAttribute@[^"]+/);
+      if(tag.includes("　@_uom")) {
+        const splitTag = tag.split("　@_");
+        const key = splitTag[0];
+        if (!newTranslations[key]) {
+          newTranslations[tag] = key;
+        }
+      } else {
+      const match = tag.match(/gen:stringAttribute name="([^"]+)"/);
       if (match && !newTranslations[tag]) {
-        newTranslations[tag] = match[0].split("@")[1];
+        newTranslations[tag] = match[1];
       }
-    });
+    }});
 
     setTranslations(newTranslations);
   }, [tags]);
@@ -65,10 +83,10 @@ const PlateauTagsComboBox: React.FC<TagsComboBoxProps> = ({
         size={10}
       >
         {tags
-          .filter((tag) => ALLOWED_KEYS.includes(tag) || /gen:stringAttribute@[^"]+/.test(tag))
+          .filter((tag) => ALLOWED_KEYS.includes(transformTag(tag)) || /gen:stringAttribute name="[^"]+"/.test(tag))
           .map((tag, index) => (
             <option title={tag} key={index} value={tag}>
-              {translations[tag] || tag}
+              {translations[transformTag(tag)] || tag}
             </option>
           ))}
       </select>

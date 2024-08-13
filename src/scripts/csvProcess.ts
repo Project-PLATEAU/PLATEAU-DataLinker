@@ -1,5 +1,23 @@
 import tagTranslations from "../constants/tagTranslations";
 
+
+const trans = (tag: string): string => {
+  if(tag.includes("　@_")) {
+    const splitTag = tag.split("　@_");
+    const key = splitTag[0];
+    const translationKey = tagTranslations[key];
+    if(tagTranslations[key] === undefined) {
+      return tag;
+    }
+    const value = translationKey + "　" + splitTag[1];
+
+    return value;
+  } else {
+
+    return tagTranslations[tag];
+  }
+}
+
 // CSVデータを処理する関数
 export function processCsvData(xmlObject: any, selectedCsvData: { tag: string; index: number }[]): void {
 
@@ -7,7 +25,8 @@ export function processCsvData(xmlObject: any, selectedCsvData: { tag: string; i
   selectedCsvData.sort((a, b) => a.index - b.index);
 
   const tags = selectedCsvData.map(data => data.tag);
-  const headerTags = selectedCsvData.map(data => tagTranslations[data.tag] || data.tag);
+  const headerTags = selectedCsvData.map(data => trans(data.tag) || data.tag);
+
 
   // CSVのヘッダー行を作成
   const rows: string[][] = [headerTags];
@@ -19,6 +38,7 @@ export function processCsvData(xmlObject: any, selectedCsvData: { tag: string; i
     if (typeof obj === "object" && obj !== null) {
       // オブジェクトの各キーと値をループで処理
       for (let [key, value] of Object.entries(obj)) {
+
         // タグが一致する場合、その値を返す
         if (key === tag) {
           if(value === 0) {
@@ -34,12 +54,20 @@ export function processCsvData(xmlObject: any, selectedCsvData: { tag: string; i
           }
         }
 
+        if (tag.includes("@_") && Object.prototype.hasOwnProperty.call(value, "@_codeSpace")) {
+          const strictValue = value as { "#text": string };
+          // console.log(strictValue["#text"]);
+          
+          return strictValue["#text"];
+        }
+
         if (typeof value === "string" && tag === value) {
           return obj["gen:value"] as string;
         }
 
         // キーが選択されたタグに含まれている場合
-        if (typeof value === "object" && tag === key) {        
+        if (typeof value === "object" && tag === key) {  
+                  
           // 現在の行に値を追加
           return (value as { [key: string]: any })["#text"];
         }

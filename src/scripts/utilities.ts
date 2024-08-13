@@ -307,6 +307,9 @@ function isPointInPolygon(
   point: [number, number],
   polygon: [number, number][]
 ): boolean {
+  point = normalizeCoordinates(point);
+  polygon = polygon.map(normalizeCoordinates);
+
   let isInside = false; // 点が多角形の内部にあるかどうかを示すフラグ
   const [x, y] = point; // 判定する点の座標を分割代入
 

@@ -9,7 +9,7 @@ const tagTranslations: { [key: string]: string } = {
   "gml:description": "建物の説明",
 
   // bldg
-  "bldg:Building@gml:id": "GML ID",
+  "gml:id": "GML ID",
   "bldg:class": "建物の分類",
   "bldg:usage": "建物の用途",
   "bldg:measuredHeight": "建物の高さ(m)",
@@ -58,12 +58,14 @@ const tagTranslations: { [key: string]: string } = {
   "uro:buildingDataQualityAttribute": "建物のデータ品質属性",
   "uro:key": "キー",
   "uro:codeValue": "コード値",
+  "uro:duration": "期間",
+  "uro:srcScale": "ソーススケール",
+  "uro:areaType": "地域タイプ",
 };
 
 
 export const ALLOWED_KEYS = [
-  "gen:stringAttribute[@name]",
-  "bldg:Building@gml:id",
+  "gml:id",
   "uro:buildingID",
   "gml:posList",
   "bldg:measuredHeight",

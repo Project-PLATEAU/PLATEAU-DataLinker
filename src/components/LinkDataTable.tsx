@@ -63,14 +63,13 @@ const DataTagTable: React.FC<DataTagTableProps> = ({
   const [selectedData, setSelectedData] = useState<
     { tag: string; plateauTag: string; attributeName: string; index: number }[]
   >([]);
-  const [attributeNames, setAttributeNames] = useState<string[]>(
-    new Array(anyDataTags.length).fill("")
-  );
+  const [attributeNames, setAttributeNames] = useState(anyDataTags);
+
 
   // anyDataTagsが変更されたときにselectedDataを初期化する
   useMemo(() => {
     setSelectedData([]);
-    setAttributeNames(new Array(anyDataTags.length).fill(""));
+    setAttributeNames(anyDataTags);
     onSelectedTagsChange([]);
   }, [anyDataTags]);
 
@@ -137,7 +136,7 @@ const DataTagTable: React.FC<DataTagTableProps> = ({
   return (
     <div
       className="shadow overflow-hidden border-b border-gray-200 sm:rounded-lg"
-      style={{ maxHeight: "260px", overflowY: "auto" }}
+      style={{ maxHeight: "450px", overflow: "auto" }}
     >
       <table className="min-w-full divide-y divide-gray-200">
         <thead
@@ -150,7 +149,7 @@ const DataTagTable: React.FC<DataTagTableProps> = ({
           }}
         >
           <tr>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+            <th className="px-5 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
               選択
             </th>
             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">

@@ -24,7 +24,7 @@ const PlateauFileUploader: React.FC<PlateauFileUploaderProps> = ({
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
 
   /**
-   * ファイルがアップロードされたときに呼び出��ハンドラ
+   * ファイルがアップロードされたときに呼び出��ラ
    * @param {React.ChangeEvent<HTMLInputElement>} event - ファイル入力の変更イベント
    */
   const handleFileUpload = async (
@@ -70,21 +70,20 @@ const PlateauFileUploader: React.FC<PlateauFileUploaderProps> = ({
    */
   const parseXMLFile = (file: File) => {
     parseFile(file, (xml) => {
-      collectTags(xml, true);
       const option = { ignoreAttributes: false, ignoreDeclaration: true };
       const parser = new XMLParser(option);
       const xmlParsed = parser.parse(xml);
 
-      // if (
-      //   xmlParsed.hasOwnProperty("core:CityModel") &&
-      //   xmlParsed["core:CityModel"].hasOwnProperty("core:cityObjectMember")
-      // ) {
-      //   const cityObjectMembers =
-      //     xmlParsed["core:CityModel"]["core:cityObjectMember"];
-      //   collectAllTags(cityObjectMembers, true);
-      // } else {
-      //   collectTags(xmlParsed, true);
-      // }
+      if (
+        xmlParsed.hasOwnProperty("core:CityModel") &&
+        xmlParsed["core:CityModel"].hasOwnProperty("core:cityObjectMember")
+      ) {
+        const cityObjectMembers =
+          xmlParsed["core:CityModel"]["core:cityObjectMember"];
+        collectAllTags(cityObjectMembers, true);
+      } else {
+        collectTags(xmlParsed, true);
+      }
 
       onDataParsed(xmlParsed);
     });
@@ -102,30 +101,28 @@ const PlateauFileUploader: React.FC<PlateauFileUploaderProps> = ({
    */
   const collectTags = (data: any, isXML: boolean) => {
     // タグを格納するSetを作成
-    const tags = new Set<string>();
-    // デフォルトのタグを追加
+    const tags: [string, string, string][] = [];
 
     /**
-     * XPathを使用してXMLオブジェクトの全要素を取得する関数
+     * XPathを使用してXMLオブジェクトの最初のcore:cityObjectMember要素の子要素を取得する関数
      * @param {Document} xmlDoc - XMLドキュメント
-     * @returns {Element[]} - 全要素の配列
+     * @returns {Element[]} - 最初のcore:cityObjectMember要素の子要素の配列
      */
-    const getAllElements = (xmlDoc: Document): Element[] => {
-      const xpath = "//core:cityObjectMember//node()";
+    const getFirstCityObjectMemberElements = (xmlDoc: Document): Element[] => {
+      const xpath = "(//core:cityObjectMember)[1]//*";
       const result = xmlDoc.evaluate(
         xpath,
         xmlDoc,
         document.createNSResolver(xmlDoc.documentElement),
-        XPathResult.ANY_TYPE,
+        XPathResult.ORDERED_NODE_SNAPSHOT_TYPE,
         null
       );
       const elements: Element[] = [];
-      let node = result.iterateNext();
-      while (node) {
-        if (node.nodeType === Node.ELEMENT_NODE) {
+      for (let i = 0; i < result.snapshotLength; i++) {
+        const node = result.snapshotItem(i);
+        if (node && node.nodeType === Node.ELEMENT_NODE) {
           elements.push(node as Element);
         }
-        node = result.iterateNext();
       }
       return elements;
     };
@@ -133,29 +130,29 @@ const PlateauFileUploader: React.FC<PlateauFileUploaderProps> = ({
     // XMLドキュメントを作成
     const parser = new DOMParser();
     const xmlDoc = parser.parseFromString(data, "text/xml");
-
-    // 全要素を取得
-    const allElements = getAllElements(xmlDoc);
-    // 全要素から値を持つタグを収集
-    allElements.forEach((element) => {
-      const tagName = element.tagName;
+    // 最初のcore:cityObjectMember要素の子要素を取得
+    const firstCityObjectMemberElements = getFirstCityObjectMemberElements(xmlDoc);
+    // 取得した要素から値を持つタグを収集
+    firstCityObjectMemberElements.forEach((element) => {
+      const tagName = element.tagName.toLowerCase();
       if (tagName && element.textContent?.trim() && !element.children.length) {
-        tags.add(tagName);
+        if (!tags.some(tag => tag[0] === tagName && tag[1] === '' && tag[2] === '')) {
+          tags.push([tagName, '', '']);
+        }
       }
       // 属性も収集
-      Array.from(element.attributes).forEach((attr) => {
+      for (const attr of element.attributes) {
         if (attr.value.trim()) {
-          if (tagName === "gen:stringAttribute") {
-            tags.add(`${tagName}@${attr.value}`);
-          } else {
-            tags.add(`${tagName}@${attr.name}`);
+          const attrName = attr.name.toLowerCase();
+          if (!tags.some(tag => tag[0] === tagName && tag[1] === attrName && tag[2] === attr.value)) {
+            tags.push([tagName, attrName, attr.value]);
           }
         }
-      });
+      }
     });
 
     // 収集したタグをコールバック関数に渡す
-    onTagsCollected(Array.from(tags));
+    onTagsCollected(tags.flatMap(tag => tag.join('')));
   };
 
   const collectAllTags = (data: any, isXML: boolean) => {
@@ -165,6 +162,10 @@ const PlateauFileUploader: React.FC<PlateauFileUploaderProps> = ({
 
     tags.forEach((tag) => tags.add(tag));
     let beforeTags = "";
+    let previousKey = '';
+    let previousValue = null;
+    let previousObj: any = null;
+    let prevPrevObj: any = null;
     /**
      * XMLデータを再帰的にトラバースしてタグを収集する関数
      * @param {any} obj - トラバースするオブジェクト
@@ -176,7 +177,7 @@ const PlateauFileUploader: React.FC<PlateauFileUploaderProps> = ({
       }
 
       // オブジェクトを再帰的にトラバース
-      if (obj && typeof obj === "object") {
+      if (obj && typeof obj === "object") {      
         Object.entries(obj).forEach(([key, value]) => {
           if (Array.isArray(value)) {
             value.forEach((item) => traverseXML(item));
@@ -188,17 +189,36 @@ const PlateauFileUploader: React.FC<PlateauFileUploaderProps> = ({
             if (key === "@_gml:id" && String(value).indexOf("bldg_") === 0) {
               tags.add("gml:id");
             }
+
+            // codeSpaceがある場合
+            if (Object.prototype.hasOwnProperty.call(value, "@_codeSpace")) {
+              const strictValue = value as { "@_codeSpace": string };
+              const codeSpace = key + "　@_codeSpace=" + strictValue["@_codeSpace"];
+              tags.add(codeSpace);
+            }
+
+            // uomがある場合
+            if (Object.prototype.hasOwnProperty.call(value, "@_uom")) {
+              const strictValue = value as { "@_uom": string };
+              
+              const uom = key + "　@_uom=" + strictValue["@_uom"];
+              tags.add(uom);
+            }
             if (typeof value === "object") {
               traverseXML(value);
             } else {
               if (
-                !key.includes("@") &&
+                !key.includes("@_") &&
                 !key.includes("#") &&
                 key !== "gen:value"
               ) {
                 tags.add(key);
               }
             }
+            // オブジェクトをシフト
+            prevPrevObj = previousObj;
+            previousObj = { [key]: value };
+
           }
         });
       }
