@@ -120,7 +120,9 @@ const traverseXmlObject = (xmlObject: any, tag: string): string | null => {
 };
 
 /**
- * CSVデータを処理する関数
+ * XMLオブジェクトからCSVデータを生成し、ダウンロード可能なファイルとして出力する関数
+ * この関数は、XMLデータを解析し、指定されたタグに基づいてCSV形式のデータを作成します。
+ * 生成されたCSVファイルは自動的にダウンロードされます。
  * @param {Object} xmlObject - XMLオブジェクト
  * @param {Array<{ tag: string, index: number }>} selectedCsvData - 選択されたCSVデータ
  */
