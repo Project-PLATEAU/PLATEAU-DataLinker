@@ -71,6 +71,7 @@ export const ALLOWED_KEYS = [
   "bldg:measuredHeight",
   "xAL:LocalityName",
   "gml:name",
+  //gen:stringAttributeは出力対象だが name=""があるため別途各コンポーネントで定義
 ];
 
 export default tagTranslations;
