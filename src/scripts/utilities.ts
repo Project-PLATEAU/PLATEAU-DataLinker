@@ -207,11 +207,6 @@ export async function matchPairs(
 
   await Promise.all(
     traverseResults.map(async (obj: any) => {
-      // if (!isValidTraverseResult(obj)) {
-      //   console.log(obj);
-      //   console.error("traverseResultsの要素が不正です。");
-      //   return;
-      // }
       await Promise.all(
         matchingValues.map(async (mv: any) => {
           

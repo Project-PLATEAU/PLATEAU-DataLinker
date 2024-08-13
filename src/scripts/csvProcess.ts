@@ -54,11 +54,23 @@ export function processCsvData(xmlObject: any, selectedCsvData: { tag: string; i
           }
         }
 
+        // コードスペースがある場合
         if (tag.includes("@_") && Object.prototype.hasOwnProperty.call(value, "@_codeSpace")) {
-          const strictValue = value as { "#text": string };
-          // console.log(strictValue["#text"]);
-          
-          return strictValue["#text"];
+          const splitTag = tag.split("=");
+          const key = splitTag[1];
+          const strictValue = value as { "#text": string , "@_codeSpace": string };
+          if (strictValue["@_codeSpace"] === key) {
+            return strictValue["#text"];
+          }
+        }
+
+        if (tag.includes("@_") && Object.prototype.hasOwnProperty.call(value, "@_uom")) {
+          const splitTag = tag.split("=");
+          const key = splitTag[1];
+          const strictValue = value as { "#text": string , "@_uom": string };
+          if (strictValue["@_uom"] === key) {
+            return strictValue["#text"];
+          }
         }
 
         if (typeof value === "string" && tag === value) {
