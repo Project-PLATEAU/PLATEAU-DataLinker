@@ -73,7 +73,6 @@ export function processCsvData(xmlObject: any, selectedCsvData: { tag: string; i
           const strictValue = value as { "#text": string , "@_uom": string };
 
           if (strictValue["@_uom"] === tagValue && tagKey === key) {
-            console.log(strictValue["@_uom"], tagValue);
             return strictValue["#text"];
           }
         }
