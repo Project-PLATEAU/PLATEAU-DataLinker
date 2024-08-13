@@ -174,7 +174,7 @@ const CsvDataItemTable: React.FC<CsvDataItemTableProps> = ({
                     }
                   />
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap">
+                <td className="px-6 py-4 whitespace-nowrap" title={transformedTag}>
                   {tagTranslations[trans(transformedTag)] || transformedTag}
                 </td>
               </tr>
