@@ -74,7 +74,7 @@ const CsvDataItemTable: React.FC<CsvDataItemTableProps> = ({
   }
   // チェックボックスの変更を処理する関数
   /**
-   * チェックボックスの状態が変更されたときに呼び出される関数
+   * チェックボックスの状態が変更されたときに呼び出される
    * @param {string} tag - 任意のデータタグ
    * @param {boolean} isChecked - チェックボックスの新しい状態
    * @param {number} index - 行番号
@@ -146,13 +146,16 @@ const CsvDataItemTable: React.FC<CsvDataItemTableProps> = ({
           }}
         >
           <tr>
-            <th
-              className="px-5 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
-              onClick={handleSelectAllToggle}
-            >
+          <th className="px-5 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
               選択
+              <div className="px-1 pt-1">
+                <Checkbox
+                  checked={selectedData.length === anyDataTags.length}
+                  onChange={handleSelectAllToggle}
+                />
+              </div>
             </th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+            <th className="px-6 py-3 text-left text-s font-medium text-gray-500 uppercase tracking-wider">
               データ項目
             </th>
           </tr>

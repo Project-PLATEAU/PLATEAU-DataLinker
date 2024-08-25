@@ -24,7 +24,7 @@ const PlateauFileUploader: React.FC<PlateauFileUploaderProps> = ({
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
 
   /**
-   * ファイルがアップロードされたときに呼び出��ラ
+   * ファイルがアップロードされたときに呼び出
    * @param {React.ChangeEvent<HTMLInputElement>} event - ファイル入力の変更イベント
    */
   const handleFileUpload = async (
@@ -190,20 +190,16 @@ const PlateauFileUploader: React.FC<PlateauFileUploaderProps> = ({
               tags.add("gml:id");
             }
 
-            // codeSpaceがある場合
-            if (Object.prototype.hasOwnProperty.call(value, "@_codeSpace")) {
-              const strictValue = value as { "@_codeSpace": string };
-              const codeSpace = key + "　@_codeSpace=" + strictValue["@_codeSpace"];
-              tags.add(codeSpace);
+            // '@_'が含まれるプロパティを動的に取得
+            if ((typeof value === "object" && value !== null) && Object.prototype.hasOwnProperty.call(value, "#text")) {
+              Object.entries(value as { [key: string]: any }).forEach(([propKey, propValue]) => {
+                if (propKey.startsWith("@_") && typeof propValue === "string") {
+                  const tag = `${key}　${propKey}=${propValue}`;
+                  tags.add(tag);
+                }
+              });
             }
 
-            // uomがある場合
-            if (Object.prototype.hasOwnProperty.call(value, "@_uom")) {
-              const strictValue = value as { "@_uom": string };
-              
-              const uom = key + "　@_uom=" + strictValue["@_uom"];
-              tags.add(uom);
-            }
             if (typeof value === "object") {
               traverseXML(value);
             } else {

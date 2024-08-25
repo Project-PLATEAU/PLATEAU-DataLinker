@@ -80,18 +80,9 @@ const traverseXmlObject = (xmlObject: any, tag: string): string | null => {
         // @_属性を含むタグの処理
         if (tag.includes("@_") && typeof value === "object") {
           const [tagKey, tagValue] = tag.split("=");
-          const strictValue = value as {
-            "#text": string;
-            "@_codeSpace"?: string;
-            "@_uom"?: string;
-          };
-
-          if (
-            (strictValue["@_codeSpace"] === tagValue ||
-              strictValue["@_uom"] === tagValue) &&
-            tagKey.split("　")[0] === key
-          ) {
-            return strictValue["#text"];
+          const result = processAttributes(value, tagValue);
+          if (result !== null && tagKey.split("　")[0] === key) {
+            return result;
           }
         }
 
@@ -116,6 +107,23 @@ const traverseXmlObject = (xmlObject: any, tag: string): string | null => {
     }
   }
   // 該当する値が見つからなかった場合
+  return null;
+};
+
+/**
+ * 汎用的に@_属性を処理する関数
+ * @param {Object} value - XMLオブジェクトの値
+ * @param {string} tagValue - タグの値
+ * @returns {string|null} 属性に対応する値、見つからない場合はnull
+ */
+const processAttributes = (value: any, tagValue: string): string | null => {
+  if (typeof value === "object" && value !== null) {
+    for (const [attrKey, attrValue] of Object.entries(value)) {
+      if (attrKey.startsWith("@_") && attrValue === tagValue) {
+        return value["#text"] || null;
+      }
+    }
+  }
   return null;
 };
 

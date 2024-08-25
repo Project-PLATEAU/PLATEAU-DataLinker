@@ -133,6 +133,25 @@ const DataTagTable: React.FC<DataTagTableProps> = ({
     onSelectedTagsChange(updatedSelectedData);
   };
 
+  // 全選択・全解除のハンドラー
+  const handleSelectAllToggle = () => {
+    if (selectedData.length === anyDataTags.length) {
+      // 全解除
+      setSelectedData([]);
+      onSelectedTagsChange([]);
+    } else {
+      // 全選択
+      const allSelectedData = anyDataTags.map((tag, index) => ({
+        tag,
+        plateauTag: "gen:stringAttribute",
+        attributeName: attributeNames[index] || "",
+        index,
+      }));
+      setSelectedData(allSelectedData);
+      onSelectedTagsChange(allSelectedData);
+    }
+  };
+
   return (
     <div
       className="shadow overflow-hidden border-b border-gray-200 sm:rounded-lg"
@@ -151,14 +170,20 @@ const DataTagTable: React.FC<DataTagTableProps> = ({
           <tr>
             <th className="px-5 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
               選択
+              <div className="px-1 pt-1">
+                <Checkbox
+                  checked={selectedData.length === anyDataTags.length}
+                  onChange={handleSelectAllToggle}
+                />
+              </div>
             </th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+            <th className="px-6 py-3 text-left text-s font-medium text-gray-500 uppercase tracking-wider">
               任意のデータタグ
             </th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+            <th className="px-6 py-3 text-left text-s font-medium text-gray-500 uppercase tracking-wider">
               PLATEAUタグ
             </th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+            <th className="px-6 py-3 text-left text-s font-medium text-gray-500 uppercase tracking-wider">
               属性名
             </th>
           </tr>
