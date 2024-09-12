@@ -1,15 +1,15 @@
 {
   "files": {
-    "main.css": "/data-integration-app/static/css/main.9b5f233c.css",
-    "main.js": "/data-integration-app/static/js/main.6f84c7a5.js",
-    "static/js/453.978e00a7.chunk.js": "/data-integration-app/static/js/453.978e00a7.chunk.js",
-    "index.html": "/data-integration-app/index.html",
-    "main.9b5f233c.css.map": "/data-integration-app/static/css/main.9b5f233c.css.map",
-    "main.6f84c7a5.js.map": "/data-integration-app/static/js/main.6f84c7a5.js.map",
-    "453.978e00a7.chunk.js.map": "/data-integration-app/static/js/453.978e00a7.chunk.js.map"
+    "main.css": "/PLATEAU-DataLinker/static/css/main.9b5f233c.css",
+    "main.js": "/PLATEAU-DataLinker/static/js/main.ac096b63.js",
+    "static/js/453.978e00a7.chunk.js": "/PLATEAU-DataLinker/static/js/453.978e00a7.chunk.js",
+    "index.html": "/PLATEAU-DataLinker/index.html",
+    "main.9b5f233c.css.map": "/PLATEAU-DataLinker/static/css/main.9b5f233c.css.map",
+    "main.ac096b63.js.map": "/PLATEAU-DataLinker/static/js/main.ac096b63.js.map",
+    "453.978e00a7.chunk.js.map": "/PLATEAU-DataLinker/static/js/453.978e00a7.chunk.js.map"
   },
   "entrypoints": [
     "static/css/main.9b5f233c.css",
-    "static/js/main.6f84c7a5.js"
+    "static/js/main.ac096b63.js"
   ]
 }
