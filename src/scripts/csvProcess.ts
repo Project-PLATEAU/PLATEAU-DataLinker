@@ -50,20 +50,22 @@ function downloadCsvContent(csvContent: string, fileName: string): void {
  * XMLオブジェクトを反復的にトラバースする関数
  * @param {Object} xmlObject - XMLオブジェクト
  * @param {string} tag - 検索するタグ
- * @returns {string|null} タグに対応する値、見つからない場合はnull
+ * @returns {string[]|null} タグに対応する値の配列、見つからない場合はnull
  */
-const traverseXmlObject = (xmlObject: any, tag: string): string | null => {
+const traverseXmlObject = (xmlObject: any, tag: string): string[] | null => {
   // スタックを使用して深さ優先探索を実装
   const stack: { obj: any; tag: string }[] = [{ obj: xmlObject, tag }];
+  const results: string[] = [];
   
   while (stack.length > 0) {
     const { obj, tag } = stack.pop()!;
     
     if (typeof obj === "object" && obj !== null) {
       for (let [key, value] of Object.entries(obj)) {
+
         // 直接一致する場合
         if (key === tag) {
-          return value === 0 ? "0" : (value as string);
+          results.push(value === 0 ? "0" : (value as string));
         }
 
         // bldg:BuildingのgmlIDを処理
@@ -74,31 +76,32 @@ const traverseXmlObject = (xmlObject: any, tag: string): string | null => {
           value !== null &&
           "@_gml:id" in value
         ) {
-          return (value as { "@_gml:id": string })["@_gml:id"];
+          results.push((value as { "@_gml:id": string })["@_gml:id"]);
         }
 
         // @_属性を含むタグの処理
         if (tag.includes("@_") && typeof value === "object") {
+
           const [tagKey, tagValue] = tag.split("=");
           const result = processAttributes(value, tagValue);
-          if (result !== null && tagKey.split("　")[0] === key) {
-            return result;
+          if (result !== null && tagKey.split("　")[0] === key) {         
+            results.push(result);
           }
         }
 
         // gen:valueの処理
         if (typeof value === "string" && tag === value) {
-          return obj["gen:value"] as string;
+          results.push(obj["gen:value"] as string);
         }
 
         // #textを含むオブジェクトの処理
         if (typeof value === "object" && tag === key) {
-          return (value as { [key: string]: any })["#text"];
+          results.push((value as { [key: string]: any })["#text"]);
         }
 
         // gml:posListの特殊処理
         if ("gml:posList" === tag && key === "bldg:lod0RoofEdge") {
-          return obj["bldg:lod0RoofEdge"]["gml:MultiSurface"]["gml:surfaceMember"]["gml:Polygon"]["gml:exterior"]["gml:LinearRing"]["gml:posList"];
+          results.push(obj["bldg:lod0RoofEdge"]["gml:MultiSurface"]["gml:surfaceMember"]["gml:Polygon"]["gml:exterior"]["gml:LinearRing"]["gml:posList"]);
         }
 
         // 再帰的探索のためにスタックに追加
@@ -107,7 +110,7 @@ const traverseXmlObject = (xmlObject: any, tag: string): string | null => {
     }
   }
   // 該当する値が見つからなかった場合
-  return null;
+  return results.length > 0 ? results : null;
 };
 
 /**
@@ -143,7 +146,20 @@ export function processCsvData(
 
   // タグと翻訳されたヘッダータグを抽出
   const tags = selectedCsvData.map((data) => data.tag);
-  const headerTags = selectedCsvData.map((data) => translateTag(data.tag) || data.tag);
+  const headerTags: string[] = [];
+  const tagCounts: { [key: string]: number } = {};
+
+  // ヘッダーのタグにインデックスを付ける
+  for (const tag of tags) {
+    if (tagCounts[tag] === undefined) {
+      tagCounts[tag] = 1;
+    } else {
+      tagCounts[tag]++;
+    }
+    // 重複がある場合のみインデックスを付ける
+    const headerTag = tagCounts[tag] > 1 ? `${translateTag(tag) || tag}${tagCounts[tag]}` : `${translateTag(tag) || tag}`;
+    headerTags.push(headerTag);
+  }
 
   // CSVのヘッダー行を作成
   const rows: string[][] = [headerTags];
@@ -152,17 +168,32 @@ export function processCsvData(
   // XMLオブジェクトを走査してCSVデータを生成
   for (const obj of xmlObj) {
     const row: string[] = [];
+    const tagValueCounts: { [key: string]: number } = {};
+
     for (const tag of tags) {
       // XMLオブジェクトからタグに対応する値を取得
-      let result = traverseXmlObject(obj, tag);
+      let results = traverseXmlObject(obj, tag);
       
       // 特定のタグの場合、配列を文字列に変換
-      if (tag === "uro:realEstateIDOfLand" && Array.isArray(result)) {
-        result = result.join(" ");
+      if (tag === "uro:realEstateIDOfLand" && Array.isArray(results)) {
+        results = [results.join(" ")];
       }
       
       // 結果をCSV行に追加（nullの場合は空文字列）
-      row.push(result !== null ? result : "");
+      if (results !== null) {
+        for (const result of results) {
+          if (tagValueCounts[tag] === undefined) {
+            tagValueCounts[tag] = 1;
+          } else {
+            tagValueCounts[tag]++;
+            // 重複する場合は連番を付ける
+            rows[0].push(tagValueCounts[tag] > 1 ? `${tag}${tagValueCounts[tag]}` : tag);
+          }
+          row.push(result);
+        }
+      } else {
+        row.push("");
+      }
     }
     rows.push(row);
   }

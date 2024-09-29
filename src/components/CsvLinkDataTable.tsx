@@ -30,6 +30,17 @@ const Checkbox = ({
   />
 );
 
+// タグの変換関数
+const transformTag = (tag: string): string => {
+  if (tag.includes("　@_")) {
+    const [key, value] = tag.split("　@_");
+    return tagTranslations[key] ? `${tagTranslations[key]}　${value}` : tag;
+  } else {
+    const match = tag.match(/gen:stringAttribute name="([^"]+)"/);
+    return match ? match[1] : tag;
+  }
+};
+
 // データタグテーブルコンポーネント
 /**
  * データタグテーブルコンポーネント
@@ -44,34 +55,6 @@ const CsvDataItemTable: React.FC<CsvDataItemTableProps> = ({
     { tag: string; index: number }[]
   >([]);
 
-  // タグの変換関数
-  const transformTag = (tag: string): string => {
-    if(tag.includes("　@_")) {
-      const splitTag = tag.split("　@_");
-      const key = splitTag[0];
-      const translationKey = tagTranslations[key];
-      if(tagTranslations[key] === undefined) {
-        return tag;
-      }
-      const value = translationKey + "　" + splitTag[1];
-
-      return value;
-    } else {
-      const match = tag.match(/gen:stringAttribute name="([^"]+)"/);
-      return match ? match[1] : tag;
-    }
-  };
-
-  const attri = (tag: string): string => {
-    const match = tag.match(/gen:stringAttribute name="([^"]+)"/);
-    return match ? match[1] : tag;
-  }
-
-  const trans = (tag: string): string => {
-    const splitTag = tag.split("　@_");
-    const key = splitTag[0];
-    return key;
-  }
   // チェックボックスの変更を処理する関数
   /**
    * チェックボックスの状態が変更されたときに呼び出される
@@ -88,23 +71,10 @@ const CsvDataItemTable: React.FC<CsvDataItemTableProps> = ({
     isChecked: boolean;
     index: number;
   }) => {
-    // 現在の選択データのコピーを作成
-    let updatedSelectedData = [...selectedData];
-    // タグを変換
-    const transformedTag = attri(tag);
-    if (isChecked) {
-
-      // チェックされた場合、新しいデータを追加
-      updatedSelectedData.push({
-        tag: transformedTag,
-        index,
-      });
-    } else {
-      // チェックが外された場合、該当するデータを削除
-      updatedSelectedData = updatedSelectedData.filter(
-        (data) => data.tag !== transformedTag
-      );
-    }
+    const transformedTag = transformTag(tag);
+    const updatedSelectedData = isChecked
+      ? [...selectedData, { tag: transformedTag, index }]
+      : selectedData.filter((data) => data.tag !== transformedTag);
 
     // 状態を更新
     setSelectedData(updatedSelectedData);
@@ -115,19 +85,15 @@ const CsvDataItemTable: React.FC<CsvDataItemTableProps> = ({
 
   // 全選択・全解除のハンドラー
   const handleSelectAllToggle = () => {
-    if (selectedData.length === anyDataTags.length) {
-      // 全解除
-      setSelectedData([]);
-      onSelectedTagsChange([]);
-    } else {
-      // 全選択
-      const allSelectedData = anyDataTags.map((tag, index) => ({
-        tag: attri(tag),
-        index,
-      }));
-      setSelectedData(allSelectedData);
-      onSelectedTagsChange(allSelectedData);
-    }
+    const allSelectedData = selectedData.length === anyDataTags.length
+      ? []
+      : anyDataTags.map((tag, index) => ({
+          tag: transformTag(tag),
+          index,
+        }));
+
+    setSelectedData(allSelectedData);
+    onSelectedTagsChange(allSelectedData);
   };
 
   return (
@@ -146,7 +112,7 @@ const CsvDataItemTable: React.FC<CsvDataItemTableProps> = ({
           }}
         >
           <tr>
-          <th className="px-5 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+            <th className="px-5 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
               選択
               <div className="px-1 pt-1">
                 <Checkbox
@@ -162,7 +128,7 @@ const CsvDataItemTable: React.FC<CsvDataItemTableProps> = ({
         </thead>
         <tbody className="bg-white divide-y divide-gray-200">
           {anyDataTags.map((tag, index) => {
-            const transformedTag = attri(tag);
+            const transformedTag = transformTag(tag);
             return (
               <tr key={index}>
                 <td className="px-6 py-4 whitespace-nowrap">
@@ -178,7 +144,7 @@ const CsvDataItemTable: React.FC<CsvDataItemTableProps> = ({
                   />
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap" title={transformedTag}>
-                  {tagTranslations[trans(transformedTag)] || transformedTag}
+                  {tagTranslations[transformedTag.split("　@_")[0]] || transformedTag}
                 </td>
               </tr>
             );

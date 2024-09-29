@@ -8,7 +8,7 @@ import AnyDataTagsListBox from "./components/AnyDataTagsListBox";
 import LinkDataTable from "./components/LinkDataTable";
 import CsvLinkDataTable from "./components/CsvLinkDataTable";
 // scripts
-import { processGMLData, processGMLDataforCsv } from "./scripts/dataProcessing";
+import { processGMLData, processGMLDataForCsv } from "./scripts/dataProcessing";
 import { processCsvData } from "./scripts/csvProcess";
 
 /**
@@ -213,36 +213,29 @@ function App() {
           <div className="flex justify-center mt-4 mb-4">
             <button
               className="bg-[#01BEBF] hover:bg-[#019A9A] text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
-            onClick={() => {
-              // processGMLDataforCsv関数を呼び出し、GMLデータと任意のデータを処理する
-              const xmlContent = processGMLDataforCsv(
-                plateauXmlObject,       // PLATEAUのXMLオブジェクト
-                anyDataXmlObject,       // 任意のデータのXMLオブジェクト
-                selectedPlateauTag,     // 選択されたPLATEAUのタグ
-                selectedAnyDataTag,     // 選択された任意のデータのタグ
-                selectedData            // 選択されたデータの配列
-              );
-            
-              // xmlContentが存在する場合、Promiseが返される
-              if (xmlContent) {
-                // Promiseが解決されたときの処理
-                xmlContent.then((resolvedXmlContent) => {
-                  // selectedDataからattributeNameを抽出し、plateauTagsに追加する
-                  const attributeNames = selectedData.map(data => data.attributeName);
-                  setTagsForCsv(plateauTags.concat(attributeNames));
-            
-                  // 解決されたXMLコンテンツをplateauXmlObjectForCsvに設定する
-                  setPlateauXmlObjectForCsv(resolvedXmlContent);
-                }).catch((error) => {
-                  // エラーが発生した場合の処理
-                  console.error("XML content processing failed:", error);
-                });
-              }
-            }}
-          >
-            データを紐づける
-          </button>
-        </div>
+              onClick={() => {
+                const xmlContent = processGMLDataForCsv(
+                  plateauXmlObject,
+                  anyDataXmlObject,
+                  selectedPlateauTag,
+                  selectedAnyDataTag,
+                  selectedData
+                );
+
+                if (xmlContent) {
+                  xmlContent.then((resolvedXmlContent: any) => {
+                    const attributeNames = selectedData.map(data => data.attributeName);
+                    setTagsForCsv(plateauTags.concat(attributeNames));
+                    setPlateauXmlObjectForCsv(resolvedXmlContent);
+                  }).catch((error: any) => {
+                    console.error("XML content processing failed:", error);
+                  });
+                }
+              }}
+            >
+              データを紐づける
+            </button>
+          </div>
           <div className="container mx-auto p-4">
             <CsvLinkDataTable
               anyDataTags={tagsForCsv}
